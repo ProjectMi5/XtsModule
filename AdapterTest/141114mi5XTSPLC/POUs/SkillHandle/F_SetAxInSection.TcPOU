@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="F_SetAxInSection" Id="{13011e24-1a67-4f8d-907e-f2e040793fff}">
+    <Declaration><![CDATA[FUNCTION F_SetAxInSection : INT
+VAR_INPUT
+	grp: INT := 0;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF grp < 1 THEN 
+	F_SetAxInSection := grp + grpcnt;
+ELSE
+	IF grp > grpcnt THEN
+		F_SetAxInSection := grp  - grpcnt;
+	ELSE
+		F_SetAxInSection := grp;
+	END_IF
+END_IF
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <DUT Name="DUT_MoverInfo" Id="{2dd040f5-56bb-4e23-8079-fd737e17be0b}">
+    <Declaration><![CDATA[TYPE DUT_MoverInfo :
+STRUCT
+	preposition: LREAL;
+	postposition: LREAL;
+	reserved: BOOL;
+	blocked: BOOL;
+	surpressed: BOOL;
+	nocurvestop	: BOOL;
+	
+	SurpressedPosition: LREAL;
+	SupressedClockwise: BOOL := FALSE;
+	TaskID: INT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+    <ObjectProperties />
+  </DUT>
+</TcPlcObject>

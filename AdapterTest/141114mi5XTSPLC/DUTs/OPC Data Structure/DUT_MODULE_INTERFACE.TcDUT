@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <DUT Name="DUT_MODULE_INTERFACE" Id="{5314a4c9-860b-46a7-8f86-7adcf2e685be}">
+    <Declaration><![CDATA[/// MODULE INTERFACE INPUT AND OUTPUT 
+TYPE DUT_MODULE_INTERFACE :
+STRUCT
+	///Information that the module reads
+	Input: DUT_MODULE_INTERFACE_INPUT;
+	///Information that the module write
+	Output: DUT_MODULE_INTERFACE_OUTPUT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+    <ObjectProperties />
+  </DUT>
+</TcPlcObject>

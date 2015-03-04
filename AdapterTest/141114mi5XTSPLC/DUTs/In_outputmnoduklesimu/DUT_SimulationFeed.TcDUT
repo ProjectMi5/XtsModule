@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <DUT Name="DUT_SimulationFeed" Id="{edb7cab5-af7c-4b9b-9600-cafec2fa02a7}">
+    <Declaration><![CDATA[TYPE DUT_SimulationFeed :
+STRUCT
+	xPosition : ARRAY [0..10] OF LREAL;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+    <ObjectProperties />
+  </DUT>
+</TcPlcObject>

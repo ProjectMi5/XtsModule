@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_UncoupleAll" Id="{e9036a14-713c-4df0-9f26-b3bc3236dd79}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_UncoupleAll
+VAR_INPUT
+	execute: BOOL;
+END_VAR
+VAR_OUTPUT
+	done: BOOL;
+	busy: BOOL;
+	error: BOOL;
+END_VAR
+VAR
+	fbuncouple: ARRAY[1..axcnt] OF MC_GearOut;
+	i: UINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[done := TRUE;
+busy := FALSE;
+error := FALSE;
+FOR i:=1 TO axcnt DO
+	fbuncouple[i](
+	Slave:= ax[i], 
+	Execute:= execute, 
+	Options:= , 
+	Done=> , 
+	Busy=> , 
+	Error=> , 
+	ErrorID=> );
+
+	IF (NOT fbuncouple[i].done) THEN
+		done := FALSE;
+	END_IF
+	IF (fbuncouple[i].busy) THEN
+		busy := TRUE;
+	END_IF
+	IF (fbuncouple[i].Error) THEN
+		error := TRUE;
+	END_IF
+END_FOR]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

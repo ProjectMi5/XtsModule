@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="OPC_Client" Id="{e0a388de-9128-4a15-b85a-54312588415e}">
+    <Declaration><![CDATA[PROGRAM OPC_Client
+VAR
+	state 				: INT := 0;
+	//fbOpen				: FB_OpcUAOpen;
+	fbConnect			: FB_OPCServerConnect;
+	fbReadVariable		: FB_ReadVariableOnce;
+	fbWriteVariableOnce	: FB_WriteVariableOnce;
+	
+	// OPC INtern:
+	ConnectionHandle	: DWORD;
+	NamespaceIndex		: UINT;
+	OPCTimer			: TON;
+	OPCTimerout			: TIME;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF ClientExecute THEN
+	ClientDone := FALSE;
+	NamespaceIndex := ClientNamespaceIndex;
+	CASE state OF
+		0:	state := 1;
+			
+		
+		
+		1:  
+			fbConnect(ClientName := 'XTS',ServerUrl := ClientModuleServerUrl, NamespaceUri := ClientNamespaceUri,execute := TRUE, ConnectHdl => ConnectionHandle,Namespaceindex => NamespaceIndex);
+			IF fbConnect.done THEN
+			state := 2;
+			END_IF
+		2: 	fbReadVariable(ConnectionHdl := ConnectionHandle,IdentifierRead := ClientReadIdentifier,NamespaceIndex := ClientNamespaceIndex,execute := TRUE,SensorValue => ClientSensorValue);
+			IF fbReadVariable.done THEN
+				ClientReadEstablished := TRUE;
+			END_IF
+			IF ClientWrite THEN
+				state := 5;
+			END_IF
+		
+		
+		5: 
+			fbReadVariable(ConnectionHdl := ConnectionHandle,IdentifierRead := ClientReadIdentifier,NamespaceIndex := ClientNamespaceIndex,execute := TRUE,SensorValue => ClientSensorValue);
+			fbWriteVariableOnce(
+					IdentifierWrite:= ClientWriteIdentifier, 
+					NamespaceIndex:= NamespaceIndex, 
+					ConnectionHdl:= ConnectionHandle, 
+					execute:= TRUE, 
+					MeasuredPosition:= AveragedPosition, 
+					done=> , 
+					busy=> , 
+					error=> );
+			IF fbWriteVariableOnce.done THEN
+				ClientDone := TRUE;
+				ClientExecute := FALSE;
+				state := 0;
+			END_IF
+	END_CASE
+ELSE
+fbConnect(execute := FALSE);
+fbReadVariable(execute := FALSE);
+fbWriteVariableOnce(execute := FALSE);
+ClientReadEstablished := FALSE;
+state := 0;
+END_IF
+bInput := ClientSensorValue;]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

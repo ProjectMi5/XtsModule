@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_ZTransport" Id="{33f592f8-3aa6-49c5-926b-f280d68b0642}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ZTransport
+VAR_INPUT
+	execute: BOOL;
+	axno: INT;
+	zPosition: LREAL;
+END_VAR
+VAR_OUTPUT
+	done: BOOL;
+	busy: BOOL;
+	error: BOOL;
+END_VAR
+VAR
+	state: INT := 0;
+	gap: LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF execute THEN
+	done	:= FALSE;/// 
+	busy := TRUE; ///
+	CASE state OF
+		
+	0: //gap berechnen 12 30 154
+		done	:= FALSE;
+		busy := TRUE;
+		gap := (-0.4123*zPosition)+ zerohightdistance;
+		state := 5;
+		
+	5:	
+		CAInterface.MoverInterface[axno].Buddyenable := FALSE;
+		IF NOT CAInterface.MoverInterface[axno].Buddyactive THEN
+			state := 10;
+		END_IF
+		
+	10: 
+		// an CA übergeben
+		CAInterface.MoverInterface[axno].Buddygap := gap;
+		CAInterface.MoverInterface[axno].Buddyenable := TRUE;
+		state := 20;
+
+	20: 
+		IF  CAInterface.MoverInterface[axno].Buddyactive THEN
+		done := TRUE;
+		busy := FALSE;
+		execute := FALSE;
+		state := 0;
+		END_IF
+	
+	
+	
+	END_CASE
+END_IF]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

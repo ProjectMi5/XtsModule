@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <GVL Name="Mover_Infos" Id="{186aac3b-ccb6-4fca-829d-336dddd1fac9}">
+    <Declaration><![CDATA[VAR_GLOBAL
+	MoverInfo: ARRAY[1..GrpCnt] OF DUT_MoverInfo;
+	AwaitingReservationAxis: INT := 0;
+	AwaitingAxisCnt: INT := 0;
+	SkillAx:	ARRAY [1..GrpCnt] OF INT;
+	Reservingaxis	: INT := 0;
+	
+END_VAR]]></Declaration>
+    <ObjectProperties />
+  </GVL>
+</TcPlcObject>

@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="F_CheckIfInSection" Id="{2ee76d77-d0c7-40bd-ac4e-4a9dc3299c03}">
+    <Declaration><![CDATA[FUNCTION F_CheckIfInSection : BOOL
+VAR_INPUT
+	Position: LREAL;
+	postposition: LREAL;
+	preposition: LREAL;
+END_VAR
+VAR
+	InSection: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+	InSection := FALSE;
+		IF postposition>preposition 
+		THEN
+				//DER RESERVIERTE BEREICH GEHT NICHT ÜBER NULL:	
+					
+					// gesamter bereich umschlungen?
+					IF Position >  preposition AND Position <= PostPosition THEN
+						InSection:= TRUE;
+					END_IF
+				
+		ELSE
+				//DER RESERVIERTE BEREICH GEHT ÜBER NULL!
+				//Bereich 1: 0 bis Postpos:
+					// Grenze in Bereich?
+					IF((Position>=0.0) AND (Position<=postposition)) 
+						THEN 
+							InSection:= TRUE;
+								
+					END_IF
+				
+				//Bereich 2: Prepos bis 4000
+					// Grenze in Bereich?
+					IF((Position>=preposition) AND (Position<=raillength)) 
+						THEN 
+							InSection:= TRUE;
+					END_IF	
+		END_IF
+
+F_CheckIfInSection := inSection;]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

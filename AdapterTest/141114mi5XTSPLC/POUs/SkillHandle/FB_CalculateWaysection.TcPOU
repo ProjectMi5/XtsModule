@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_CalculateWaysection" Id="{a9e52097-3796-4483-826b-b2f0e2b3aef8}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CalculateWaysection
+VAR_INPUT
+	Clockwise: BOOL := TRUE;
+	Startpos: LREAL;
+	Endpos: LREAL;
+	WaySectionGap: LREAL;
+	Execute: BOOL;
+END_VAR
+VAR_OUTPUT
+	Prepos: LREAL;
+	Postpos: LREAL;
+	done: BOOL;
+END_VAR
+VAR
+	state: INT := 0;
+	distance: LREAL;
+	conflict: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//DIESER FB Berechnet die waysection abhängig von start und endpos, sowie dem geünschten sicherheitsgap und der richtung
+//er gibt werte zwischen 0.0 und 4000.0 aus
+IF Execute THEN
+	
+
+	done := FALSE;
+
+	CASE state OF
+	0: 	conflict := FALSE;
+		Prepos := 0;
+		Postpos := 0;		
+		state := 1;
+
+	1:	//Überprüfung Überrundung
+		IF Endpos>Startpos THEN
+			distance := Endpos-Startpos;
+		ELSE
+			distance := Endpos + 4000 - startpos;
+		END_IF
+		state := 2;
+	2: 
+		IF Clockwise THEN
+			IF ((4000.0-distance)<=(2*WaySectionGap)) THEN
+				conflict := TRUE;
+				//im Uhrzeigersinn
+					Prepos 	:= Startpos - WaySectionGap;
+					Postpos := Startpos - WaySectionGap-0.001;
+					IF Prepos < 0 THEN
+						Prepos := Prepos +4000.0;
+					END_IF
+					IF Postpos < 0 THEN
+					Postpos := Postpos +4000.0;
+					END_IF
+					state := 100;
+			ELSE //alles in ordnung
+				state := 5;						
+			END_IF
+		ELSE
+			IF ((distance)<=(2*WaySectionGap)) THEN
+				conflict := TRUE;//gegen unzeigersinn
+							Prepos 	:= Endpos	- WaySectionGap;
+							Postpos := Endpos	- WaySectionGap - 0.001;
+							IF Prepos < 0 THEN
+								Prepos := Prepos +4000.0;
+							END_IF
+							IF Postpos < 0 THEN
+								Postpos := Postpos +4000.0;
+							END_IF
+							IF Postpos > 4000.0 THEN
+								Postpos := Postpos -4000.0;
+							END_IF
+							state := 100;
+			ELSE //alles in ordnung
+				state := 5;				
+			END_IF
+		END_IF
+	
+	
+	
+	
+	5: 
+		IF Clockwise THEN // ziel liegt im uhrzeigersinn nicht über null
+		state := 10;
+		ELSE
+		state := 20;
+		END_IF
+	
+	
+	10: //im Uhrzeigersinn
+		Prepos 	:= Startpos - WaySectionGap;
+		Postpos := Endpos	+ WaySectionGap;
+		IF Prepos < 0 THEN
+			Prepos := Prepos +4000.0;
+		END_IF
+		IF Postpos > 4000.0 THEN
+			Postpos := Postpos -4000.0;
+		END_IF
+		state := 100;
+	
+		
+	20://gegen Uhrzeigersinn
+		Prepos 	:= Endpos	- WaySectionGap;
+		Postpos := Startpos + WaySectionGap;
+		IF Prepos < 0 THEN
+			Prepos := Prepos +4000.0;
+		END_IF
+		IF Postpos > 4000.0 THEN
+			Postpos := Postpos -4000.0;
+		END_IF
+		state := 100;
+	
+		
+	100: done := TRUE;
+		 execute := FALSE;
+		 state := 1;
+	END_CASE
+ELSE state := 1;
+
+END_IF]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

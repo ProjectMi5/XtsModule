@@ -1,0 +1,237 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_CAHandle" Id="{912e924e-7531-41d8-ac8f-1b91c2da3e93}">
+    <Declaration><![CDATA[
+FUNCTION_BLOCK FB_CAHandle
+VAR_OUTPUT
+	initdone: BOOL;
+	cadone: BOOL;
+	reset: BOOL;
+END_VAR
+VAR
+	state: INT := -10;
+	resetstate: INT := 2;
+	nextstate: INT;
+	halt: BOOL;
+	forcedisable: BOOL;
+	fbpowerall: FB_PowerAll;
+	fbresetall: FB_ResetAll;
+	fbaddall: FB_AddAllAxes;
+	fbremoveall: FB_RemoveAllAxesCA;
+	fbhaltall: FB_HaltAll;
+	fbCAgrpEnable: MC_GroupEnableCA(calltargetOID);
+	fbCAgrpDisable: MC_GroupDisableCA(calltargetOID);
+	fbCAgrpReset: MC_GroupResetCA(calltargetOID);
+	fbCAgrpStatus: MC_GroupReadStatusCA;
+	fbCAgrpError: MC_GroupReadErrorCA;
+	fbuncoupleall: FB_UncoupleAll;
+	fbCaInterfaceHandle: ARRAY[1..grpcnt] OF FB_CAInterfaceHandle;
+	fbCoupleInit: FB_CoupleInit;
+	i: UINT;
+	targetpos: ARRAY[1..grpcnt] OF LREAL;
+	///targetposact: ARRAY[1..grpcnt] OF LREAL;
+	movervel: LREAL := 1000;
+	railLength: LREAL := 4000;
+END_VAR
+VAR_INPUT
+	executereset: BOOL := TRUE;
+	goon: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+fbpowerall(enable:=TRUE, axes := poweredaxes);
+fbCAgrpStatus(AxesGroup:=CAgrp, enable:=TRUE);
+fbCAgrpError(AxesGroup:=CAgrp, enable:=TRUE);
+
+IF (fbpowerall.ison ) AND NOT executereset THEN
+	CASE state OF
+		
+		-10: fbCoupleInit(execute := TRUE,startline := WaitingAbsPosition - 100.0 + ax[1].NcToPlc.moduloactturns * 4000);
+			IF fbCoupleInit.done THEN
+				state := -5;
+			END_IF
+			
+		-5:	fbaddall(Execute:=FALSE);
+			fbaddall(Execute:=TRUE);
+			
+			(* CAinterface.MoverInterface[1].Targetpos := 1000;
+			CAinterface.MoverInterface[2].Targetpos := 1500;
+			CAinterface.MoverInterface[3].Targetpos := 2000;
+			CAinterface.MoverInterface[4].Targetpos := 2500;
+			*)
+			state := -4;
+		-4:	
+			fbaddall();
+			IF (NOT fbaddall.Busy) THEN
+				IF (NOT fbaddall.Error) THEN
+					nextstate := -3;
+					state := -3; //100
+				END_IF
+			END_IF
+		-3:
+			fbCAgrpEnable(AxesGroup:=CAgrp, execute:=FALSE);
+			fbCAgrpEnable(AxesGroup:=CAgrp, execute:=TRUE);
+			state := -2;
+		-2:
+			fbCAgrpEnable(AxesGroup:=CAgrp);
+			IF (fbCAgrpEnable.Done) THEN
+				ADSLOGSTR(ADSLOG_MSGTYPE_HINT, 'XTS Successfully Activated', '');
+				nextstate := 0;
+				cadone		:= TRUE;
+				state := 0;
+			END_IF
+		0:	// now all axes are in the enabled group, we start with some moves
+			FOR i := 1 TO grpcnt DO
+			fbCaInterfaceHandle[i](axisno := i, movervel := MoverInterface[i].Velocity, moveracc := MoverInterface[i].Acceleration);	
+			END_FOR	
+			initdone := TRUE;
+			
+			
+		5:
+			fbhaltall(execute:=FALSE);
+			fbhaltall(execute:=TRUE);
+			state := 6;
+		6:	fbhaltall();
+			IF (fbhaltall.Done) THEN
+				state := 100;
+			END_IF
+		10:
+			fbCAgrpDisable(AxesGroup:=CAgrp, execute:=FALSE);
+			fbCAgrpDisable(AxesGroup:=CAgrp, execute:=TRUE);
+			state := 11;
+		11:	fbCAgrpDisable(AxesGroup:=CAgrp);
+			IF (fbCAgrpDisable.Done) THEN
+				state := 12;
+			END_IF
+		12:
+			fbremoveall(Execute:=FALSE);
+			fbremoveall(Execute:=TRUE);
+			state := 13;
+		13:	fbremoveall();
+			IF (NOT fbremoveall.Busy) THEN
+				IF (NOT fbremoveall.Error) THEN
+					ADSLOGSTR(ADSLOG_MSGTYPE_HINT, 'All Axes Removed From Group', '');
+					nextstate := 14;
+					state := 100;
+				END_IF
+			END_IF
+			
+		14:	fbresetall(execute:=FALSE);
+			fbresetall(execute:=TRUE);
+			state := 15;
+		15:
+			fbresetall();
+			IF (NOT fbresetall.Busy) THEN
+				IF (NOT fbresetall.Error) THEN
+					ADSLOGSTR(ADSLOG_MSGTYPE_HINT, 'All Axes Successfully Reset', '');
+					nextstate := -5;
+					state := 100;
+				END_IF
+			END_IF
+			
+		16: fbuncoupleall.execute := FALSE;
+			state := 17;
+		17: fbuncoupleall.execute := TRUE;
+			
+		100: 
+			ADSLOGSTR(ADSLOG_MSGTYPE_HINT, 'Set MAIN.goon to TRUE to continue', '');
+			state := 101;
+		101:
+			IF (goon) THEN				
+				state := nextstate;
+				goon := FALSE;
+			END_IF			
+
+	END_CASE
+	
+IF (halt) THEN
+		state := 5;
+		halt := FALSE;
+	END_IF
+IF (forcedisable) THEN
+		state := 10;
+		forcedisable := FALSE;
+	END_IF
+END_IF
+
+
+
+FOR i:=1 TO grpcnt DO
+	CAInterface.MoverInterface[i].Setpos := GVL.ax[2*i].NcToPlc.ModuloSetPos ;
+	IF (ABS(CAInterface.MoverInterface[i].Targetpos - GVL.ax[2*i].NcToPlc.ModuloSetPos)) < 0.1 THEN
+		CAInterface.MoverInterface[i].Setpos := CAInterface.MoverInterface[i].Targetpos;
+		IF NOT CAInterface.MoverInterface[i].Buddyenable THEN
+		CAInterface.MoverInterface[i].MovementDone := TRUE;
+		END_IF
+	END_IF
+	
+END_FOR
+
+IF  executereset THEN
+	CASE resetstate OF
+			
+		0: 	FOR i := 1 TO axcnt DO
+			poweredaxes[i] := TRUE;
+			END_FOR
+			resetstate := 2;
+		2:	fbuncoupleall.execute := FALSE;
+			fbuncoupleall.execute := TRUE;
+			resetstate := 3;
+		3:	fbuncoupleall();
+			IF fbuncoupleall.done OR NOT fbuncoupleall.busy THEN
+				resetstate := 4;
+			END_IF
+		4:	fbCAgrpReset(AxesGroup:=CAgrp, execute:=FALSE);			
+			fbCAgrpReset(AxesGroup:=CAgrp, execute:=TRUE);
+			resetstate := 5;
+		5:  fbCAgrpReset(AxesGroup:=CAgrp);
+			IF fbCAgrpReset.Done THEN
+				resetstate := 6;
+				
+			END_IF
+		6: 
+			fbresetall(execute := FALSE);
+			fbresetall(execute := TRUE);
+			resetstate := 7;
+		7:  
+			fbresetall();
+			IF NOT fbresetall.busy THEN
+				resetstate := 8;
+				
+			END_IF
+		8: 
+			fbCAgrpDisable(AxesGroup := CAgrp,Execute := FALSE);
+			fbCAgrpDisable(AxesGroup := CAgrp,Execute := TRUE);
+			resetstate := 9;
+			
+		9: fbCAgrpDisable(AxesGroup := CAgrp);
+			IF fbCAgrpDisable.Done THEN
+				resetstate := 10;
+				
+			END_IF
+		10: fbremoveall.execute := FALSE;
+			fbremoveall.execute := TRUE;
+			fbremoveall();
+			resetstate := 11;
+			
+		11:  fbremoveall();
+			IF fbremoveall.done THEN
+				resetstate := 12;
+				fbremoveall.execute := FALSE;
+			END_IF
+		12:
+			resetstate := 0;
+			executereset := FALSE;
+			state := -10;
+	END_CASE
+ELSE
+	resetstate := 0;
+END_IF
+	
+
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

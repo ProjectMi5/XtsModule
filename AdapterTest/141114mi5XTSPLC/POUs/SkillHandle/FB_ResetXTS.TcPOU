@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_ResetXTS" Id="{cce96e9e-5c54-4ffe-8472-bd17b38409c8}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ResetXTS
+VAR_INPUT
+	execute: BOOL;
+END_VAR
+VAR
+	state: INT := 0;
+	i: INT;
+	cyclecnt: INT := 0;
+	skillcyclecnt: INT := 0;
+	processcycles: INT := 5;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF execute THEN
+	CASE state OF
+	-1: 
+		skillcyclecnt 	:= 0;
+		cyclecnt		:= 0;
+		state := 0;
+	0:
+		MI5.Module2001.Input.SkillInput.SkillInput0.Execute := FALSE;	
+		MI5.Module2001.Input.SkillInput.SkillInput1.Execute := FALSE;
+		MI5.Module2001.Input.SkillInput.SkillInput2.Execute := TRUE;
+		MI5.Module2001.Input.SkillInput.SkillInput3.Execute := FALSE;
+		MI5.Module2001.Input.SkillInput.SkillInput4.Execute := TRUE;
+		MI5.Module2001.Input.SkillInput.SkillInput5.Execute := FALSE;
+		
+		MI5.Module2002.Input.SkillInput.SkillInput0.Execute := FALSE;	
+		MI5.Module2002.Input.SkillInput.SkillInput1.Execute := FALSE;
+		MI5.Module2002.Input.SkillInput.SkillInput2.Execute := TRUE;
+		MI5.Module2002.Input.SkillInput.SkillInput3.Execute := FALSE;
+		MI5.Module2002.Input.SkillInput.SkillInput4.Execute := TRUE;
+		MI5.Module2002.Input.SkillInput.SkillInput5.Execute := FALSE;
+		
+		MI5.Module2003.Input.SkillInput.SkillInput0.Execute := FALSE;	
+		MI5.Module2003.Input.SkillInput.SkillInput1.Execute := FALSE;
+		MI5.Module2003.Input.SkillInput.SkillInput2.Execute := TRUE;
+		MI5.Module2003.Input.SkillInput.SkillInput3.Execute := FALSE;
+		MI5.Module2003.Input.SkillInput.SkillInput4.Execute := TRUE;
+		MI5.Module2003.Input.SkillInput.SkillInput5.Execute := FALSE;
+		cyclecnt := cyclecnt +1;
+		IF cyclecnt > processcycles THEN
+			state := 10;
+			cyclecnt := 0;
+		END_IF
+	
+	10: 
+		MI5.Module2001.Input.SkillInput.SkillInput0.Execute := FALSE;	
+		MI5.Module2001.Input.SkillInput.SkillInput1.Execute := FALSE;
+		MI5.Module2001.Input.SkillInput.SkillInput2.Execute := FALSE;
+		MI5.Module2001.Input.SkillInput.SkillInput3.Execute := FALSE;
+		MI5.Module2001.Input.SkillInput.SkillInput4.Execute := FALSE;
+		MI5.Module2001.Input.SkillInput.SkillInput5.Execute := FALSE;
+		
+		MI5.Module2002.Input.SkillInput.SkillInput0.Execute := FALSE;	
+		MI5.Module2002.Input.SkillInput.SkillInput1.Execute := FALSE;
+		MI5.Module2002.Input.SkillInput.SkillInput2.Execute := FALSE;
+		MI5.Module2002.Input.SkillInput.SkillInput3.Execute := FALSE;
+		MI5.Module2002.Input.SkillInput.SkillInput4.Execute := FALSE;
+		MI5.Module2002.Input.SkillInput.SkillInput5.Execute := FALSE;
+		
+		MI5.Module2003.Input.SkillInput.SkillInput0.Execute := FALSE;	
+		MI5.Module2003.Input.SkillInput.SkillInput1.Execute := FALSE;
+		MI5.Module2003.Input.SkillInput.SkillInput2.Execute := FALSE;
+		MI5.Module2003.Input.SkillInput.SkillInput3.Execute := FALSE;
+		MI5.Module2003.Input.SkillInput.SkillInput4.Execute := FALSE;
+		MI5.Module2003.Input.SkillInput.SkillInput5.Execute := FALSE;
+		cyclecnt := cyclecnt +1;
+		IF cyclecnt > processcycles THEN
+			
+			cyclecnt := 0;
+			skillcyclecnt := skillcyclecnt +1;
+			IF skillcyclecnt > processcycles THEN
+				state := 15;
+				skillcyclecnt := 0;
+			ELSE
+				state := 0;
+			END_IF
+		END_IF
+	15: state := 20;
+		FOR i := 1 TO grpcnt DO
+			IF Moverinfo[i].reserved OR MoverInfo[i].blocked THEN
+				state := -1;				
+			END_IF
+		END_FOR
+	
+	20:	mi5.ResetXTS := FALSE;
+		state := 0;
+		execute := FALSE;
+		
+	
+	
+	
+	
+	END_CASE
+END_IF]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

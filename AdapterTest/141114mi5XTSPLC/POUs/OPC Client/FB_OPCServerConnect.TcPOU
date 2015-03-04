@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_OPCServerConnect" Id="{8c13d7d1-5db5-4e4f-8557-1f8a16673d5c}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OPCServerConnect
+VAR_INPUT
+	ServerUrl: STRING;
+	NamespaceUri: STRING;
+	ClientName: STRING;
+	execute: BOOL;
+END_VAR
+VAR_OUTPUT
+	ConnectHdl: DWORD;
+	Namespaceindex: UINT;
+	busy: BOOL;
+	done: BOOL;
+	error: BOOL;
+END_VAR
+VAR
+	fbGetNameSpace: UA_GetNamespaceIndex;
+	SesionconnectInfo: ST_UASessionConnectInfo;
+	Timeout: TIME := DEFAULT_ADS_TIMEOUT;
+	state: INT := -1;
+	fbConnect: UA_Connect;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF execute THEN
+	CASE state OF
+	-1: 	SesionconnectInfo.sApplicationName			:=ClientName;
+			SesionconnectInfo.eSecurityMode				:=1; 
+			SesionconnectInfo.eSecurityPolicyUri		:=1;
+			SesionconnectInfo.eTransportProfileUri		:=1;
+			SesionconnectInfo.tConnectTimeout			:=T#4S;
+			SesionconnectInfo.tSessionTimeout			:=T#3S;
+			
+			
+			busy 	:= TRUE;
+			done	:= FALSE;							
+			state 	:= 0;
+
+	0:
+         fbConnect(
+			Execute:= FALSE, 
+			ServerUrl:=ServerUrl , 
+			SessionConnectInfo:= SesionconnectInfo, 
+			Timeout:= Timeout, 
+			ConnectionHdl=> ConnectHdl, 
+			Done=>, 
+			Busy=>busy, 
+			Error=>error, 
+			ErrorID=>);
+			
+	 		state := 1;
+			
+	1:
+         fbConnect(
+			Execute:= TRUE, 
+			ServerUrl:=ServerUrl , 
+			SessionConnectInfo:= SesionconnectInfo, 
+			Timeout:= Timeout, 
+			ConnectionHdl=> ConnectHdl,  
+			Done=>, 
+			Busy=>busy, 
+			Error=>error, 
+			ErrorID=> );
+			
+			IF fbConnect.done THEN
+			
+			state := 2;
+			END_IF
+		
+
+			
+ 		
+		
+	2:	
+		fbGetNameSpace(
+			Execute:= FALSE,
+			ConnectionHdl:=ConnectHdl,
+			NamespaceUri:=NamespaceUri,
+			Timeout:=Timeout,
+			NamespaceIndex=>Namespaceindex,
+			Done=>,
+			Busy=>busy,
+			Error=>error,
+			ErrorID=>,);	
+			
+			state := 3;	
+	3:
+		fbGetNameSpace(
+			Execute:= TRUE,
+			ConnectionHdl:=ConnectHdl,
+			NamespaceUri:=NamespaceUri,
+			Timeout:=Timeout,
+			NamespaceIndex=>Namespaceindex,
+			Done=>,
+			Busy=>busy,
+			Error=>error,
+			ErrorID=>,);
+			IF fbGetNameSpace.done THEN
+			Execute := FALSE;
+			busy	:= FALSE;
+			done	:= TRUE;
+			state 	:= 0;
+			END_IF
+		END_CASE
+ELSE 
+state := -1;
+END_IF
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

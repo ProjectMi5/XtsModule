@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_ReadVariableOnce" Id="{11a79bdb-9d15-430d-8462-5377f4123a0b}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ReadVariableOnce
+VAR_INPUT
+	IdentifierRead: STRING;
+	NamespaceIndex: UINT;
+	ConnectionHdl: DWORD;
+	execute: BOOL;
+END_VAR
+VAR_OUTPUT
+	SensorValue: BOOL;
+	done: BOOL;
+	busy: BOOL;
+	error: BOOL;
+END_VAR
+VAR
+	/// FBs
+	fbNodeGetHandle: UA_NodeGetHandle;
+	fbReadVariable: UA_Read;
+	///Variables
+	pSensorValue: POINTER TO BOOL;
+	VariableSize: UDINT;
+	NodeHdl: DWORD;
+	cbDataR: UDINT;
+	state: INT := -1;
+
+	Timeout: TIME := DEFAULT_ADS_TIMEOUT;
+	SessionNodeID	: ST_UANodeID;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF execute THEN 
+	CASE state OF
+		
+		-1:	SessionNodeID.nNamespaceIndex    			:= Namespaceindex;
+			SessionNodeID.eIdentifierType				:= 1;
+			SessionNodeID.sIdentifier					:= IdentifierRead;
+			VariableSize 								:= SIZEOF (SensorValue);
+			pSensorValue								:= ADR(SensorValue);
+			
+			
+			
+
+			busy := TRUE;
+			done := FALSE;
+			state:=0;
+
+		0: fbNodeGetHandle(
+			Execute:=FALSE,
+			ConnectionHdl:=ConnectionHdl,
+			NodeID:=SessionNodeID,
+			Timeout:=Timeout,
+			NodeHdl=>NodeHdl,
+			Done=>,
+			Busy=>busy,
+			Error=>,
+			ErrorID=>,);
+			state:=1;
+			
+		1:fbNodeGetHandle(
+			Execute:=TRUE,
+			ConnectionHdl:=ConnectionHdl,
+			NodeID:=SessionNodeID,
+			Timeout:=Timeout,
+			NodeHdl=>NodeHdl,
+			Done=>,
+			Busy=>busy,
+			Error=>,
+			ErrorID=>,);
+			IF fbNodeGetHandle.Done THEN
+			state := 2;
+			END_IF
+			
+		2:
+			fbReadVariable(
+				Execute:= FALSE, 
+				ConnectionHdl:= ConnectionHdl, 
+				NodeHdl:= NodeHdl, 
+				stNodeAddInfo:= , 
+				pVariable:= pSensorValue, 
+				cbData:= VariableSize, 
+				Timeout:= DEFAULT_ADS_TIMEOUT, 
+				Done=> , 
+				Busy=> , 
+				Error=> , 
+				ErrorID=> , 
+				cbData_R=>cbDataR );
+				state := 3;
+				error :=FALSE;
+				
+		3:		fbReadVariable(
+				Execute:= TRUE, 
+				ConnectionHdl:= ConnectionHdl, 
+				NodeHdl:= NodeHdl, 
+				stNodeAddInfo:=, 
+				pVariable:= pSensorValue, 
+				cbData:= VariableSize, 
+				Timeout:= DEFAULT_ADS_TIMEOUT, 
+				Done=>, 
+				Busy=>, 
+				Error=>error, 
+				ErrorID=>, 
+				cbData_R=>cbDataR );
+				IF fbReadVariable.Done THEN
+					state		:= 2;
+					execute		:= FALSE;
+					done		:= TRUE;
+					busy		:= FALSE;
+				END_IF		
+		
+	END_CASE
+ELSE
+	state := -1;
+END_IF]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

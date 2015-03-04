@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_WriteVariableOnce" Id="{7b86a908-402a-4c56-94f9-4c4c64cde33e}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_WriteVariableOnce
+VAR_INPUT
+	IdentifierWrite: STRING;
+	NamespaceIndex: UINT;
+	ConnectionHdl: DWORD;
+	execute: BOOL;
+	MeasuredPosition: LREAL;
+END_VAR
+VAR_OUTPUT
+	done: BOOL;
+	busy: BOOL;
+	error: BOOL;
+END_VAR
+VAR
+	/// FBs
+	fbWriteVariable: UA_Write;
+	fbNodeGetHandle: UA_NodeGetHandle;
+	fbNodeReleaseHandle: UA_NodeReleaseHandle;
+	/// Variables
+	state: INT := -1;
+	pMeasuredPosition: POINTER TO LREAL;
+	VariableSize: UDINT;
+	NodeHdl: DWORD;
+	Timeout: TIME := DEFAULT_ADS_TIMEOUT;
+	SesionNodeID: ST_UANodeID;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF execute THEN
+	CASE state OF
+		
+		-1:	SesionNodeID.nNamespaceIndex    			:= Namespaceindex;
+			SesionNodeID.eIdentifierType				:= 1;
+			SesionNodeID.sIdentifier					:= IdentifierWrite;
+			VariableSize 								:= SIZEOF (LREAL);
+			pMeasuredPosition							:= ADR(MeasuredPosition);
+			
+			
+			done := FALSE;
+			state:=0;
+		
+	    0: fbNodeGetHandle(
+			Execute:=FALSE,
+			ConnectionHdl:=ConnectionHdl,
+			NodeID:=SesionNodeID,
+			Timeout:=Timeout,
+			NodeHdl=>NodeHdl,
+			Done=>,
+			Busy=>,
+			Error=>,
+			ErrorID=>,);
+			state:=1;
+			
+		1:fbNodeGetHandle(
+			Execute:=TRUE,
+			ConnectionHdl:=ConnectionHdl,
+			NodeID:=SesionNodeID,
+			Timeout:=Timeout,
+			NodeHdl=>NodeHdl,
+			Done=>,
+			Busy=>,
+			Error=>,
+			ErrorID=>,);
+			IF fbNodeGetHandle.Done THEN
+			state := 2;
+			END_IF
+			
+		
+				
+		2: fbWriteVariable(
+				Execute:=FALSE , 
+				ConnectionHdl:=ConnectionHdl , 
+				NodeHdl:=NodeHdl , 
+				stNodeAddInfo:= , 
+				pVariable:= pMeasuredPosition, 
+				cbData:= VariableSize, 
+				Timeout:=Timeout , 
+				Done=> , 
+				Busy=> , 
+				Error=> , 
+				ErrorID=> );
+				
+				state:=3;
+				
+		3: fbWriteVariable(
+				Execute:=TRUE , 
+				ConnectionHdl:=ConnectionHdl , 
+				NodeHdl:=NodeHdl , 
+				stNodeAddInfo:= , 
+				pVariable:= pMeasuredPosition, 
+				cbData:= VariableSize, 
+				Timeout:=Timeout , 
+				Done=> , 
+				Busy=> , 
+				Error=> , 
+				ErrorID=> );
+				IF fbWriteVariable.Done THEN
+					state := 4;
+				END_IF
+				IF fbWriteVariable.Error THEN
+					state := -1;
+				END_IF
+				
+				
+		4:		fbNodeReleaseHandle(
+						Execute:= FALSE, 
+						ConnectionHdl:= , 
+						NodeHdl:= , 
+						Timeout:= , 
+						Done=> , 
+						Busy=> , 
+						Error=> , 
+						ErrorID=> );
+				state := 5;
+		5: 		fbNodeReleaseHandle(
+								Execute:= TRUE, 
+								ConnectionHdl:= ConnectionHdl, 
+								NodeHdl:= NodeHdl, 
+								Timeout:= Timeout, 
+								Done=> , 
+								Busy=> , 
+								Error=> , 
+								ErrorID=> );
+				IF fbNodeReleaseHandle.Done THEN
+					state		:= -1;
+					execute		:= FALSE;
+					done		:= TRUE;
+					busy		:= FALSE;
+				END_IF		
+	END_CASE
+ELSE
+	state := -1;
+END_IF ]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

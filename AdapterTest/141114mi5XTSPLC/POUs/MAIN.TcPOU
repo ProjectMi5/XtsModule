@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="MAIN" Id="{c7cc4dd1-a633-4051-a294-77dfcf6cdba3}">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	fbSkillHandleAll	: FB_SkillHandleAll;
+	fbCaHandle			: FB_CAHandle;
+	fbSimuLampHandle	: FB_SimuLampHandle;
+	fbTranslate			: FB_TranslateInterface;
+	fbTest1				: FB_TEST1;
+	fbTest2				: FB_TEST2;
+	fbTest3				: FB_TEST3;
+	fbXInitTest			: Fb_Test_init_x;
+	fbYInitTest			: Fb_Test_init_y;
+	fbZInitTest			: Fb_Test_init_z;
+	fbResetXTS			: Fb_ResetXTS;
+	fbXInitCreme1		: Fb_Test_init_Creme1;
+	fbXInitCocktail		: Fb_Test_init_Cocktail;
+	fbXInitCookie		: Fb_Test_init_Cookie;
+	shortTest2001		: FB_SHortTEST1;
+	shortTest2002		: FB_SHortTEST2;
+	shortTest2003		: FB_SHortTEST3;
+	fb2001Cocktail		: FB_2001_cocktail;
+	fb2002Cookie		: FB_2002cookie;
+	fb2003cookie		: FB_2003_cookie;
+	warmuptimer			: TON;
+	warmup				: BOOL;
+	i: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+fbCaHandle();
+fbSkillHandleAll();
+fbTranslate();
+fbSimuLampHandle();
+fbTest1();
+fbTest2();
+fbTest3();
+fbxInitTest();
+fbYInitTest();
+fbZInitTest();
+fbXInitCreme1();
+fbXInitCocktail();
+fbXInitCookie();
+fbResetXTS();
+fb2001Cocktail();
+fb2002Cookie();
+fb2003cookie();
+warmuptimer(IN := TRUE, PT := T#55M);
+IF warmuptimer.Q THEN 
+	warmup := FALSE;
+	warmuptimer(IN := FALSE);
+END_IF
+shortTest2001(execute := Maintenance);
+shortTest2002(execute := ,);
+shortTest2003(execute := ,);
+
+IF ResetXTS THEN
+	fbResetXTS.execute := TRUE;
+END_IF
+IF Restart AND restartstate = 0THEN 
+	restartstate := 1;
+	FOR i := 1 TO Grpcnt DO
+	Moverinfo[i].blocked := FALSE;
+	Moverinfo[i].reserved := FALSE;
+	Moverinfo[i].surpressed := FALSE;
+	Moverinfo[i].SurpressedPosition := 0;
+	Moverinfo[i].nocurvestop := FALSE;
+	Moverinfo[i].postposition := F_SetInSection(MoverInterface[i].Setpos + WaySectionGap);
+	Moverinfo[i].preposition :=  F_SetInSection(MoverInterface[i].Setpos - WaySectionGap);
+	freevelo := 300;		
+	END_FOR
+	restartstate := 2;
+	
+END_IF
+IF restartstate = 4 THEN
+	restart := FALSE;
+	restartstate := 0;
+END_IF
+
+
+IF fbCaHandle.initdone THEN
+fbSkillHandleAll.execute := TRUE;
+fbSimuLampHandle.execute := TRUE;
+ELSE
+	IF fbCaHandle.cadone THEN
+		fbSkillHandleAll.startinit := TRUE;
+	END_IF
+END_IF
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="MNG_SIMULATION" Id="{ac0ae1f7-3097-466c-8721-202d27d11f9b}">
+    <Declaration><![CDATA[FUNCTION_BLOCK MNG_Simulation
+VAR_INPUT
+    bEnable    : BOOL                          := FALSE;
+    outputs    : MNG_Application_Outputs_32Bit         ;
+END_VAR
+VAR_OUTPUT
+    inputs     : MNG_Application_Inputs_32Bit          ;
+END_VAR
+VAR
+    ioUpdater  : MNG_UpdateIOs                 := (sRemoteHost := '192.168.42.31', nRemotePort := 6010);
+    fbCloseAll : FB_SocketCloseAll;
+    bCloseAll  : BOOL := TRUE;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* @END_DECLARATION := '0'                                                    *)
+IF bCloseAll THEN (*On PLC reset or program download close all old (opened) connections *)
+    bCloseAll := FALSE;
+    fbCloseAll( bExecute:= TRUE );
+ELSE
+    fbCloseAll( bExecute:= FALSE );
+END_IF
+
+IF NOT fbCloseAll.bBusy THEN
+
+    (* ------------------------------------- trigger data exchange ----------------------------------------------------------------------------*)
+    ioUpdater(Outputs := outputs, Inputs => inputs, bEnable := bEnable);
+
+END_IF
+
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,219 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_CheckWaysection" Id="{f9e37a89-da76-4949-a201-1af8fcd2436b}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CheckWaysection
+VAR_INPUT
+	CheckPreposition: LREAL;
+	CheckPostposition: LREAL;
+	CheckMoverNo: INT;
+	Execute: BOOL;
+END_VAR
+VAR_OUTPUT
+	SectionFree: BOOL;
+	axisblocking: ARRAY[1..GrpCnt] OF BOOL;
+	done: BOOL;
+	busy: BOOL;
+END_VAR
+VAR
+	i: INT;
+	state: INT := 0;
+	test: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF Execute THEN
+	busy := TRUE;
+	done := FALSE;
+
+CASE state OF
+	0: //überprüfen ob checkpositionen zusammenhängend sind
+		IF (CheckPreposition < CheckPostposition) THEN
+			//bereich zusammenhängend:
+			
+		state := 10;
+		ELSE state := 20;
+		END_IF
+		
+		
+	10:	//RESET VALUES
+		SectionFree := TRUE;
+		FOR i:=1 TO grpcnt DO
+			axisblocking[i] := FALSE;
+		END_FOR
+		state := 11;	
+	11: //checkpositionen zusammenhängend
+		FOR i := 1 TO grpcnt DO
+			
+		IF NOT (i=CheckMoverNo) THEN
+			IF MoverInfo[i].postposition>MoverInfo[i].preposition 
+				THEN
+				//DER RESERVIERTE BEREICH GEHT NICHT ÜBER NULL:	
+					
+					// gesamter bereich umschlungen?
+					IF ((CheckPostposition>MoverInfo[i].postposition)AND(CheckPreposition<MoverInfo[i].preposition))
+					THEN 
+							SectionFree := FALSE;
+							axisblocking[i] := TRUE;
+							test := test +1;	
+					END_IF
+					// Grenze in Bereich?
+					IF((CheckPostposition>=MoverInfo[i].preposition) AND (CheckPostposition<=MoverInfo[i].postposition)) OR ((CheckPreposition>=MoverInfo[i].preposition) AND (CheckPreposition<=MoverInfo[i].postposition)) 
+						THEN 
+							SectionFree := FALSE;
+							axisblocking[i] := TRUE;
+							test := test +1;	
+					END_IF
+				
+				
+				ELSE
+				//DER RESERVIERTE BEREICH GEHT ÜBER NULL!
+				
+				//Splitten des Bereichs:
+				//Bereich 1: 0 bis Postpos:
+					// Grenze in Bereich?
+					IF((CheckPostposition>=0.0) AND (CheckPostposition<=MoverInfo[i].postposition)) OR ((CheckPreposition>=0.0) AND (CheckPreposition<=MoverInfo[i].postposition)) 
+						THEN 
+							SectionFree := FALSE;
+							axisblocking[i] := TRUE;
+							test := test +1;	
+					END_IF
+				
+				//Bereich 2: Prepos bis 4000
+					// Grenze in Bereich?
+					IF((CheckPostposition>=MoverInfo[i].preposition) AND (CheckPostposition<=raillength)) OR ((CheckPreposition>=MoverInfo[i].preposition) AND (CheckPreposition<=raillength)) 
+						THEN 
+							SectionFree := FALSE;
+							axisblocking[i] := TRUE;
+							test := test +1;	
+					END_IF	
+			END_IF
+		END_IF		
+		END_FOR
+		state := 200;	
+	
+	
+	
+	
+	20:	//RESET VALUES
+		SectionFree := TRUE;
+		FOR i:=1 TO grpcnt DO
+			axisblocking[i] := FALSE;
+		END_FOR
+		state := 21;
+	
+
+	21: //checkpositionen NICHT zusammenhängend:
+		
+		//Bereich von 0 bis CheckPostpos
+		FOR i := 1 TO grpcnt DO
+			
+			IF NOT (i=CheckMoverNo) THEN
+				IF MoverInfo[i].postposition>MoverInfo[i].preposition 
+					THEN
+					//DER RESERVIERTE BEREICH GEHT NICHT ÜBER NULL:	
+						
+						// gesamter bereich umschlungen?
+						IF ((CheckPostposition>MoverInfo[i].postposition)AND(0.0<MoverInfo[i].preposition))
+						THEN 
+								SectionFree := FALSE;
+								axisblocking[i] := TRUE;
+								test := test +1;	
+						END_IF
+						// Grenze in Bereich?
+						IF((CheckPostposition>MoverInfo[i].preposition) AND (CheckPostposition<=MoverInfo[i].postposition)) OR ((0.0>=MoverInfo[i].preposition) AND (0.0<=MoverInfo[i].postposition)) 
+							THEN 
+								SectionFree := FALSE;
+								axisblocking[i] := TRUE;
+								test := test +1;	
+						END_IF
+					
+					
+					ELSE
+					//DER RESERVIERTE BEREICH GEHT ÜBER NULL!
+					
+					//Splitten des Bereichs:
+					//Bereich 1: 0 bis Postpos:
+						// Grenze in Bereich?
+						IF((CheckPostposition>=0.0) AND (CheckPostposition<=MoverInfo[i].postposition)) OR ((0.0>=0.0) AND (0.0<=MoverInfo[i].postposition)) 
+							THEN 
+								SectionFree := FALSE;
+								axisblocking[i] := TRUE;
+								test := test +1;	
+						END_IF
+					
+					//Bereich 2: Prepos bis 4000
+						// Grenze in Bereich?
+						IF((CheckPostposition>=MoverInfo[i].preposition) AND (CheckPostposition<=raillength)) OR ((0.0>=MoverInfo[i].preposition) AND (0.0<=raillength)) 
+							THEN 
+								SectionFree := FALSE;
+								axisblocking[i] := TRUE;
+								test := test +1;	
+						END_IF	
+				END_IF
+			END_IF		
+		END_FOR
+		//Bereich von CheckPrepos bis Laillenth
+		FOR i := 1 TO grpcnt DO
+			
+		IF NOT (i=CheckMoverNo) THEN
+			IF MoverInfo[i].postposition>MoverInfo[i].preposition 
+				THEN
+				//DER RESERVIERTE BEREICH GEHT NICHT ÜBER NULL:	
+					
+					// gesamter bereich umschlungen?
+					IF ((Raillength>MoverInfo[i].postposition)AND(CheckPreposition<MoverInfo[i].preposition))
+					THEN 
+							SectionFree := FALSE;
+							axisblocking[i] := TRUE;
+							test := test +1;	
+					END_IF
+					// Grenze in Bereich?
+					IF((Raillength>=MoverInfo[i].preposition) AND (Raillength<=MoverInfo[i].postposition)) OR ((CheckPreposition>=MoverInfo[i].preposition) AND (CheckPreposition<=MoverInfo[i].postposition)) 
+						THEN 
+							SectionFree := FALSE;
+							axisblocking[i] := TRUE;
+							test := test +1;	
+					END_IF
+				
+				
+				ELSE
+				//DER RESERVIERTE BEREICH GEHT ÜBER NULL!
+				
+				//Splitten des Bereichs:
+				//Bereich 1: 0 bis Postpos:
+					// Grenze in Bereich?
+					IF((Raillength>=0.0) AND (Raillength<=MoverInfo[i].postposition)) OR ((CheckPreposition>=0.0) AND (CheckPreposition<=MoverInfo[i].postposition)) 
+						THEN 
+							SectionFree := FALSE;
+							axisblocking[i] := TRUE;
+							test := test +1;	
+					END_IF
+				
+				//Bereich 2: Prepos bis 4000
+					// Grenze in Bereich?
+					IF((Raillength>=MoverInfo[i].preposition) AND (Raillength<=raillength)) OR ((CheckPreposition>=MoverInfo[i].preposition) AND (CheckPreposition<=raillength)) 
+						THEN 
+							SectionFree := FALSE;
+							axisblocking[i] := TRUE;
+							test := test +1;	
+					END_IF	
+				END_IF
+			END_IF		
+		END_FOR
+		state := 200;
+	200: 
+		done := TRUE;
+		busy := FALSE;
+		Execute := FALSE;
+		state := 0;
+	
+END_CASE
+
+ELSE 
+state := 0;
+END_IF
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

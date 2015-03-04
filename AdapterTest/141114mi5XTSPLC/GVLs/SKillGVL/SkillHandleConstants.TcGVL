@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <GVL Name="SkillHandleConstants" Id="{ecbb643c-e846-4509-95f4-2085deb32320}">
+    <Declaration><![CDATA[VAR_GLOBAL
+	WaySectionGap		: LREAL := 110.0;
+	WaitingAbsPosition	: LREAL := 950;
+	
+	Startposition		: ARRAY[1..AxCnt] OF LREAL; // positionen, in denen sich die mover vor couple einfinden
+END_VAR]]></Declaration>
+    <ObjectProperties />
+  </GVL>
+</TcPlcObject>

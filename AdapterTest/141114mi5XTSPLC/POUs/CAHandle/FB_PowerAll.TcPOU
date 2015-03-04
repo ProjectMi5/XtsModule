@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_PowerAll" Id="{e90e153e-e247-4e8d-b2ac-f42a321f4e8f}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_PowerAll
+VAR_INPUT
+	enable: BOOL;
+	axes: ARRAY[1..axcnt] OF BOOL;
+END_VAR
+VAR_OUTPUT
+	ison: BOOL;
+END_VAR
+VAR
+	FBPower: ARRAY[1..axcnt] OF MC_power;
+	i: UINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+ison := TRUE;
+
+FOR i:=1 TO axcnt DO
+	FBPower[i](Axis:=ax[i],
+		Enable			:= axes[i],
+		Enable_Positive	:= enable,
+		Enable_Negative	:= enable
+	(*	Status			:	BOOL;	(* B *)
+		Busy			: 	BOOL;	(* V *)
+		Active			: 	BOOL;	(* V *)
+		Valid			: 	BOOL;*)	(* E *)	(* not implemented - use Busy 
+		Error			:	BOOL;	(* B *)
+		ErrorID			:	UDINT;	(* E *)*)
+		);
+	IF (FBPower[i].Error OR ( NOT FBPower[i].Status AND axes[i]) )THEN
+		ison := FALSE;
+	END_IF
+END_FOR
+FOR i:=1 TO grpcnt DO
+	FBPower[i](Axis:=grp[i],
+		Enable			:= enable,
+		Enable_Positive	:= enable,
+		Enable_Negative	:= enable
+	(*	Status			:	BOOL;	(* B *)
+		Busy			: 	BOOL;	(* V *)
+		Active			: 	BOOL;	(* V *)
+		Valid			: 	BOOL;*)	(* E *)	(* not implemented - use Busy 
+		Error			:	BOOL;	(* B *)
+		ErrorID			:	UDINT;	(* E *)*)
+		);
+	IF (FBPower[i].Error OR NOT FBPower[i].Status) THEN
+		ison := FALSE;
+	END_IF
+END_FOR
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

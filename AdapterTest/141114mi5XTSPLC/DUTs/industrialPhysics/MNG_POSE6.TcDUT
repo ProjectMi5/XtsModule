@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <DUT Name="MNG_POSE6" Id="{c824fa20-098c-4f06-b1c1-ed5e45272c3c}">
+    <Declaration><![CDATA[TYPE MNG_POSE6 :
+STRUCT
+	x: REAL;
+	y: REAL;
+	z: REAL;
+	a: REAL;
+	b: REAL;
+	c: REAL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+    <ObjectProperties />
+  </DUT>
+</TcPlcObject>

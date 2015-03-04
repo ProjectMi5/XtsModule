@@ -1,0 +1,717 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_SkillHandle" Id="{25c041fc-4662-4e37-ac4c-56de18806f01}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SkillHandle
+VAR_INPUT
+	Input: DUT_MODULE_INTERFACE_INPUT;
+END_VAR
+VAR_OUTPUT
+	Output: DUT_MODULE_INTERFACE_OUTPUT;
+	mymover: INT;
+END_VAR
+VAR
+	goon: BOOL;
+	nextstate: INT;
+	myTimer: TOF;
+	state: INT := -10;
+	MoverNo: INT := 0;
+	InitMoverNo: INT := 0;
+	Nextaxis: INT := 0;
+	measuredcycles: INT := 0;
+	///Instances:
+	fbTransport: FB_Transport;
+	fbSuppressedTransport: FB_Transport;
+	suppressed: BOOL;
+	fbAutoBlock: FB_AutoBlock;
+	fbUnblockTimer: FB_AutoBlock;
+	fbZTransport: FB_ZTransport;
+	i: INT;
+	tempposition: LREAL;
+	Timeout: TON;
+	IdleTimer: TON;
+	curvedistance: LREAL;
+	idletempposition: LREAL;
+	fbIdleReservedTransport: FB_FreeTransport;
+	repeatcounter	: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[mymover := MoverNo;
+
+IF NOT restart THEN
+
+IF (NOT (MoverNo = 0)) THEN
+	IF MoverInfo[MoverNo].surpressed
+		THEN	suppressed := TRUE;
+		ELSE	suppressed := FALSE;
+	END_IF
+	IF NOT MoverInfo[MoverNo].blocked THEN
+		MoverInterface[MoverNo].Buddyenable := FALSE;
+	END_IF
+END_IF
+
+IF NOT MoverNo = 0 THEN
+	Output.StateValue[0].Description := 'Current Velocity of current Mover';
+	Output.StateValue[0].Dummy		:= FALSE;
+	Output.StateValue[0].Name		:= 'Velocity';
+	Output.StateValue[0].Unit		:= '[mm/s]';
+	Output.StateValue[0].Value 		:= ax[2*MoverNo].NcToPlc.ActVelo;
+END_IF
+IF NOT suppressed THEN
+	//normaler Modus, suppressed = FALSE
+	CASE state OF
+		
+			// SKILLWERTE SCHREIBEN
+			-10:
+				// MODUL INITIALISIEREN
+				Output.Dummy 	:= FALSE;
+				Output.Name		:= 'TRANSPORTMODUL';
+				Output.CurrentTaskDescription	:= 'Initializing';
+				Output.ID		:= 1234; ////muss sich ändern!
+				
+				// SKILL 0 Calibrating 
+				
+				Output.SkillOutput[0].Name 	:= 'Position Calibration';
+				Output.SkillOutput[0].ID 	:= 1321 ;
+				Output.SkillOutput[0].Ready  := FALSE ;
+				Output.SkillOutput[0].Dummy  := FALSE ;
+				Output.SkillOutput[0].Done   := FALSE ; 
+				Output.SkillOutput[0].Busy   := FALSE ;
+				Output.SkillOutput[0].ParameterOutput[0].Name := 'StringValue: ModuleServerUrl in format opc.tcp:192.168.175.xxx:4840' ; 
+				Output.SkillOutput[0].ParameterOutput[0].Dummy:= FALSE;
+				Output.SkillOutput[0].ParameterOutput[0].Required:= TRUE ;
+	            Output.SkillOutput[0].ParameterOutput[0].MinValue:= 0 ;
+				Output.SkillOutput[0].ParameterOutput[0].MaxValue:= 0 ;
+				Output.SkillOutput[0].ParameterOutput[1].Name := 'StringValue: Module Output String Identifier (Sensor) ' ; 
+				Output.SkillOutput[0].ParameterOutput[1].Dummy:= FALSE;
+				Output.SkillOutput[0].ParameterOutput[1].Required:= TRUE ;
+	            Output.SkillOutput[0].ParameterOutput[1].MinValue:= 0 ;
+				Output.SkillOutput[0].ParameterOutput[1].MaxValue:= 0 ;
+				Output.SkillOutput[0].ParameterOutput[2].Name := 'StringValue: Module Input String Identifier (Position/Lreal) ' ; 
+				Output.SkillOutput[0].ParameterOutput[2].Dummy:= FALSE;
+				Output.SkillOutput[0].ParameterOutput[2].Required:= TRUE ;
+	            Output.SkillOutput[0].ParameterOutput[2].MinValue:= 0 ;
+				Output.SkillOutput[0].ParameterOutput[2].MaxValue:= 0 ;
+				
+				
+				
+				// SKILL 1 reserve INITIALISIEREN
+	
+				Output.SkillOutput[1].Name 	:= 'Reserve';
+				Output.SkillOutput[1].ID 	:= 1310 ;
+				Output.SkillOutput[1].Ready  := FALSE ;
+				Output.SkillOutput[1].Dummy  := FALSE ;
+				Output.SkillOutput[1].Done   := FALSE ; 
+				Output.SkillOutput[1].Busy   := FALSE ;
+				Output.SkillOutput[1].ParameterOutput[1].Name := 'TaskID' ; 
+				Output.SkillOutput[1].ParameterOutput[1].Dummy:= FALSE;
+				Output.SkillOutput[1].ParameterOutput[1].Required:= TRUE ;
+	            Output.SkillOutput[1].ParameterOutput[1].MinValue:= 1 ;
+				Output.SkillOutput[1].ParameterOutput[1].MaxValue:=30000 ;
+				
+				
+			 
+	            // SKILL 2 unreserve INITIALISIEREN 
+	           
+	            Output.SkillOutput[2].Name   :='Unreserve' ;
+	            Output.SkillOutput[2].ID     := 1311 ;	
+				Output.SkillOutput[2].Ready  := FALSE ;
+				Output.SkillOutput[2].Dummy  := FALSE ; 
+	            Output.SkillOutput[2].Done   := FALSE ;
+				Output.SkillOutput[2].Busy   := FALSE ;
+				Output.SkillOutput[2].ParameterOutput[1].Name := 'TaskID';
+				Output.SkillOutput[2].ParameterOutput[1].Dummy:= FALSE;
+				Output.SkillOutput[2].ParameterOutput[1].Required:= TRUE ;
+				Output.SkillOutput[2].ParameterOutput[1].MinValue:= 1;
+				Output.SkillOutput[2].ParameterOutput[1].MaxValue:=30000 ;
+	             
+				// SKILL 3 block INITIALISIEREN 
+				
+				Output.SkillOutput[3].Name   :='Block';
+	            Output.SkillOutput[3].ID     := 1315 ;	
+				Output.SkillOutput[3].Ready  := FALSE ;
+				Output.SkillOutput[3].Dummy  := FALSE ; 
+	            Output.SkillOutput[3].Done   := FALSE ;
+				Output.SkillOutput[3].Busy   := FALSE ;
+				Output.SkillOutput[3].ParameterOutput[1].Name := 'TaskID';
+				Output.SkillOutput[3].ParameterOutput[1].Dummy:= FALSE;
+				Output.SkillOutput[3].ParameterOutput[1].Required:= TRUE ;
+				Output.SkillOutput[3].ParameterOutput[1].MinValue:= 1;
+				Output.SkillOutput[3].ParameterOutput[1].MaxValue:=30000 ;
+				
+				// SKILL 4 unblock INTIALISIEREN 
+				
+				Output.SkillOutput[4].Name   :='Unblock' ;
+	            Output.SkillOutput[4].ID     := 1316 ;	
+				Output.SkillOutput[4].Ready  := FALSE ;
+				Output.SkillOutput[4].Dummy  := FALSE ; 
+	            Output.SkillOutput[4].Done   := FALSE ;
+				Output.SkillOutput[4].Busy   := FALSE ;
+				Output.SkillOutput[4].ParameterOutput[1].Name :=   'TaskID';
+				Output.SkillOutput[4].ParameterOutput[1].Dummy:= FALSE;
+				Output.SkillOutput[4].ParameterOutput[1].Required:= TRUE ;
+				Output.SkillOutput[4].ParameterOutput[1].MinValue:= 1    ;
+				Output.SkillOutput[4].ParameterOutput[1].MaxValue:= 30000 ;
+				
+				// SKILL 5 transport INITIALISIEREN 
+				
+				Output.SkillOutput[5].Name   :='Transport' ;
+	            Output.SkillOutput[5].ID     := 1320 ;	
+				Output.SkillOutput[5].Ready  := FALSE ;
+				Output.SkillOutput[5].Dummy  := FALSE ; 
+	            Output.SkillOutput[5].Done   := FALSE ;
+				Output.SkillOutput[5].Busy   := FALSE ;
+				Output.SkillOutput[5].ParameterOutput[1].Name := 'TargetPosition X';
+				Output.SkillOutput[5].ParameterOutput[1].Dummy:= FALSE;
+				Output.SkillOutput[5].ParameterOutput[1].Required:= TRUE ;
+				Output.SkillOutput[5].ParameterOutput[1].MinValue:= 0    ;
+				Output.SkillOutput[5].ParameterOutput[1].MaxValue:= 4000 ;
+				Output.SkillOutput[5].ParameterOutput[2].Name := 'TargetPosition Z';
+				Output.SkillOutput[5].ParameterOutput[2].Dummy:= FALSE;
+				Output.SkillOutput[5].ParameterOutput[2].Required:= FALSE ;
+				Output.SkillOutput[5].ParameterOutput[2].MinValue:= 0.0    ;
+				Output.SkillOutput[5].ParameterOutput[2].MaxValue:= 90.0 ;
+				Output.SkillOutput[5].ParameterOutput[2].Default:= 0.0; 
+				Output.SkillOutput[5].ParameterOutput[3].Name := 'Velocity';
+				Output.SkillOutput[5].ParameterOutput[3].Dummy:= FALSE;
+				Output.SkillOutput[5].ParameterOutput[3].Required:= FALSE ;
+				Output.SkillOutput[5].ParameterOutput[3].MinValue:= 100    ;
+				Output.SkillOutput[5].ParameterOutput[3].MaxValue:= 4000 ;
+				Output.SkillOutput[5].ParameterOutput[3].Default := 2000;
+				Output.SkillOutput[5].ParameterOutput[4].Name := 'Acceleration';
+				Output.SkillOutput[5].ParameterOutput[4].Dummy:= FALSE;
+				Output.SkillOutput[5].ParameterOutput[4].Required:= FALSE ;
+				Output.SkillOutput[5].ParameterOutput[4].MinValue:= 100    ;
+				Output.SkillOutput[5].ParameterOutput[4].MaxValue:= 4000 ;
+				
+				state := 0;
+				
+			0: // Unreserved 
+				IF AwaitingAxisCnt>0 THEN
+					AwaitingAxisCnt := AwaitingAxisCnt -1;
+					state := 1;				
+				END_IF
+			
+			
+	    	1:		// Unreserved
+					FOR i := 0 TO SkillCnt DO 
+					Output.SkillOutput[i].Ready := FALSE;
+					Output.SkillOutput[i].Busy := FALSE;
+					Output.SkillOutput[i].Done := FALSE;
+					Output.SkillOutput[i].Error := FALSE;
+					END_FOR
+					
+					Output.SkillOutput[1].Ready                    :=TRUE; //reserve
+					Output.SkillOutput[0].Ready                    :=TRUE;
+					 
+	            	             
+	
+	             	IF Input.SkillInput[1].Execute THEN 
+	                
+	                	Output.SkillOutput[1].Ready := FALSE ;
+						Output.SkillOutput[0].Ready := FALSE ;
+						Output.SkillOutput[1].Busy  := TRUE ;
+						state:=10 ;
+					
+					END_IF
+					IF Input.SkillInput[0].Execute THEN
+	                	Output.SkillOutput[0].Ready := FALSE ;
+						Output.SkillOutput[1].Ready := FALSE ;
+						Output.SkillOutput[0].Busy  := FALSE ;
+						state:=85 ;
+	                			FOR i := 1 TO Grpcnt DO
+										IF Output.SkillOutput[0].Busy THEN
+											state := 1;
+											
+										END_IF
+								END_FOR
+						Output.SkillOutput[0].Busy  := TRUE ;
+					END_IF
+				   
+			10:	//Reserve			     	
+					IF AwaitingReservationAxis > 0 THEN
+						
+						//find, which mover is next in line for reservation
+						
+						MoverNo := AwaitingReservationAxis;
+						 
+						MoverInfo[AwaitingReservationAxis].blocked := FALSE;
+						
+						awaitingreservationaxis := 0;
+						Nextaxis := F_SetAxInSection(AwaitingReservationAxis -1);
+						
+						//IF MoverInterface[moverNO].Setpos = WaitingAbsPosition THEN
+							state := 12;
+						//END_IF
+							
+	             	//Set mover to reserved in Global Mover Info
+						
+					
+					
+	            		MoverInfo[MoverNo].reserved:=TRUE;
+						MoverInfo[MoverNo].TaskID	:= REAL_TO_INT (Input.SkillInput[1].ParameterInput[1].Value);
+	                
+	                	
+						Output.SkillOutput[1].Done := TRUE;
+						Output.SkillOutput[1].Busy := FALSE;
+						Output.SkillOutput[1].Error := FALSE;
+						
+						
+						state:=13 ;
+						fbTransport(execute := FALSE, reset := TRUE); 
+					END_IF
+			13:		//IF NOT MoverInfo[Nextaxis].reserved THEN
+					//AwaitingReservationAxis := nextaxis;
+					//END_IF
+
+
+					// internal Block mover next in line
+					//MoverInfo[nextaxis].blocked := TRUE;
+					
+					IF MoverInterface[moverno].Setpos = WaitingAbsPosition	THEN		
+						fbTransport( axisno := moverno, execute := TRUE,RequestPosition := F_SetInSection(WaitingAbsPosition + 2* couplegap + 5.0),requestvelo := defaultvelo);
+						state := 14;
+						
+					ELSE
+						state := 15;
+					END_IF
+			14: 
+			
+				fbTransport( axisno := moverno,RequestPosition := F_SetInSection(WaitingAbsPosition + 2* couplegap + 5.0),requestvelo := defaultvelo);
+				IF fbTransport.done THEN
+					state := 15;
+					fbTransport(reset := TRUE);
+				END_IF
+		
+			15:		//warten bis execute zurückgezogen
+					IF NOT(Input.SkillInput[1].Execute) THEN
+						Output.SkillOutput[1].Done := FALSE;
+						state:=20;
+					END_IF
+					
+					
+				 
+				 
+	  		20:		//Reserved
+					IdleTimer(IN := FALSE);
+					fbIdleReservedTransport(reset := TRUE);
+					state := 21;
+			21:
+					fbAutoBlock(axno := MoverNo);
+					
+					IdleTimer(IN := TRUE, PT := T#1000S);
+					IF IdleTimer.Q AND (Moverinfo[F_SetAxInSection(Moverno-1)].reserved) THEN
+						fbIdleReservedTransport.AxisNo := MoverNo;
+						IF NOT (idletempposition = F_SetInSection( Moverinfo[F_SetAxInSection(Moverno+1)].preposition - WaySectionGap - 0.1 - Curvedistance) )THEN
+						idletempposition := F_SetInSection( Moverinfo[F_SetAxInSection(Moverno+1)].preposition - WaySectionGap - 0.1 - Curvedistance);
+						fbIdleReservedTransport(reset := TRUE);
+						END_IF
+						IF NOT F_CheckIfInCurve(idletempposition) THEN
+								IF Moverinfo[F_SetAxInSection(Moverno+1)].reserved THEN
+								fbIdleReservedTransport.RequestPosition := idletempposition;
+								ELSE	
+								fbIdleReservedTransport.RequestPosition := WaitingAbsPosition - 6 * WaySectionGap - 0.1;
+								END_IF
+								fbIdleReservedTransport.execute := TRUE;
+								curvedistance := 0;
+						ELSE
+						curvedistance := curvedistance + 10.0;	
+						END_IF
+					END_IF
+					
+					fbIdleReservedTransport();
+					
+					FOR i := 0 TO SkillCnt DO 
+					Output.SkillOutput[i].Ready := FALSE;
+					Output.SkillOutput[i].Busy := FALSE;
+					Output.SkillOutput[i].Done := FALSE;
+					Output.SkillOutput[i].Error := FALSE;
+					END_FOR
+					
+					Output.SkillOutput[2].Ready := TRUE;
+					Output.SkillOutput[3].Ready := TRUE;
+					Output.SkillOutput[5].Ready := TRUE;
+					
+	              	IF Input.SkillInput[5].Execute THEN 
+						fbTransport(reset := TRUE);									   (*in Case of transportation*)
+	                    state:=30;	
+						Output.SkillOutput[5].Done := FALSE;
+						Output.SkillOutput[5].Busy := TRUE;
+						FOR i := 0 TO SkillCnt DO 
+						Output.SkillOutput[i].Ready := FALSE;
+						END_FOR					
+					END_IF
+	
+	             	IF  Input.SkillInput[2].Execute THEN   (*Mover releasing *)
+	                    state :=50;
+						fbTransport(reset := TRUE);
+						Output.SkillOutput[2].Busy := TRUE;
+						FOR i := 0 TO SkillCnt DO 
+						Output.SkillOutput[i].Ready := FALSE;
+						END_FOR	
+					END_IF
+	
+	            	IF Input.SkillInput[3].Execute THEN   (*blocking *)
+	                    state:=60;
+						fbTransport(reset := TRUE);
+						Output.SkillOutput[3].Busy := TRUE;
+						FOR i := 0 TO SkillCnt DO 
+						Output.SkillOutput[i].Ready := FALSE;
+						END_FOR	
+				    END_IF		
+	
+					 
+			30:	 //TRANSPORT		
+					fbAutoBlock(axno := MoverNo);			
+	 				IF Input.SkillInput[5].ParameterInput[4].Value> 0 AND Input.SkillInput[5].ParameterInput[4].Value < nocurvesvelo THEN
+					MoverInfo[MoverNo].nocurvestop := TRUE;	
+					END_IF
+	                
+			
+			
+					fbTransport(
+								execute:= TRUE, 
+								RequestPosition := Input.SkillInput[5].ParameterInput[1].Value,
+								AxisNo:= MoverNo, 
+								requestacc := Input.SkillInput[5].ParameterInput[4].Value,
+								requestvelo := Input.SkillInput[5].ParameterInput[3].Value,								
+								ready=> , 
+								error=> , 
+								busy=> , 
+								done=> 
+								);
+	
+	               IF fbTransport.done THEN             
+	               state:=31 ;
+				   fbTransport(reset := TRUE);
+				   MoverInfo[MoverNo].blocked 	:= TRUE;				   
+				   END_IF
+				   
+				31: 	//überprüfen ob z anforderung
+						fbAutoBlock(axno := MoverNo);
+						IF Input.SkillInput[5].ParameterInput[2].Value = 0 THEN
+							state := 40;
+						ELSE state := 32;
+						END_IF
+				32:		IF 		(1500<Input.SkillInput[5].ParameterInput[1].Value AND (2000+couplegap)>Input.SkillInput[5].ParameterInput[1].Value)
+							OR 	(3500<Input.SkillInput[5].ParameterInput[1].Value AND (4000)>Input.SkillInput[5].ParameterInput[1].Value) OR (Input.SkillInput[5].ParameterInput[1].Value<couplegap)
+							OR (0.0>Input.SkillInput[5].ParameterInput[2].Value OR 111.0<Input.SkillInput[5].ParameterInput[2].Value)
+						THEN // nicht zugelassen!
+							state := 41;
+							fbAutoBlock(axno := MoverNo);
+							Output.SkillOutput[1].done  :=FALSE;
+	                    	Output.SkillOutput[2].ready :=FALSE;
+	                    	Output.SkillOutput[3].ready :=FALSE;
+	                    	Output.SkillOutput[4].ready :=FALSE;
+	                    	Output.SkillOutput[5].done  :=FALSE;
+							Output.SkillOutput[5].Error := TRUE;
+							Output.SkillOutput[5].busy	:= FALSE;
+						ELSE
+							state := 35;				                   
+						END_IF
+						
+						
+						//z-bewegung
+				35: 	fbZTransport.execute := TRUE;
+						state := 36;
+						
+						
+				36: 
+						fbZTransport( zPosition := Input.SkillInput[5].ParameterInput[2].Value, axno := MoverNo);
+						IF fbZTransport.done THEN						
+							fbAutoBlock(execute := FALSE,axno := MoverNo);
+				   			fbAutoBlock(execute := TRUE);
+							state := 40;
+						END_IF
+						
+						
+				40:	    
+						fbAutoBlock(axno := MoverNo,execute := FALSE);
+						fbAutoBlock(axno := MoverNo,execute := TRUE);
+						
+						Output.SkillOutput[5].done  :=TRUE;
+						Output.SkillOutput[5].busy	:= FALSE;
+						
+	                    state:=41;
+						
+						
+				41:		//warten bis execute zurückgezogen
+						fbAutoBlock(axno := MoverNo);
+						Output.SkillOutput[5].busy	:= FALSE;
+						Output.SkillOutput[5].done  :=TRUE;
+							IF NOT(Input.SkillInput[5].Execute) THEN
+								state:=20 ;
+								Output.SkillOutput[5].Done := FALSE;
+							END_IF
+						
+						   
+				50:		//Release
+							MoverInfo[MoverNo].nocurvestop := FALSE;
+	              		 	MoverInfo[MoverNo].reserved := FALSE;
+							MoverInfo[MoverNo].blocked := FALSE;
+	                       	MoverInfo[MoverNo].TaskID	:= 0;
+							MoverNo						:= 0;
+							AwaitingAxisCnt := AwaitingAxisCnt +1;
+							
+						Output.SkillOutput[2].busy := FALSE;
+						Output.SkillOutput[2].done := TRUE;
+	  					state:=51 ;
+						
+				51:		//warten bis execute zurückgezogen
+						IF NOT(Input.SkillInput[2].Execute) THEN
+							state:=0 ;
+							Output.SkillOutput[2].Done := FALSE;
+						END_IF
+						   
+						//Block
+				60:	  
+							
+	                        
+						MoverInfo[MoverNo].blocked 	:= TRUE;
+						  
+	                    Output.SkillOutput[3].busy:=FALSE;
+						Output.SkillOutput[3].done:=TRUE;
+						   
+	                    state:=61;
+						
+				61:		//warten bis execute zurückgezogen
+						Output.SkillOutput[3].done:=TRUE;
+						IF NOT(Input.SkillInput[3].Execute) THEN
+							state:=70 ;
+							Output.SkillOutput[3].Done := FALSE;
+						END_IF
+						   
+	            70:		//BLOCKED
+						FOR i := 0 TO SkillCnt DO 
+						Output.SkillOutput[i].Ready := FALSE;
+						Output.SkillOutput[i].Busy := FALSE;
+						Output.SkillOutput[i].Done := FALSE;
+						Output.SkillOutput[i].Error := FALSE;
+						END_FOR			
+						Output.SkillOutput[4].Ready := TRUE;
+						
+						IF Input.SkillInput[4].Execute THEN
+							state := 80;
+							Output.SkillOutput[4].busy   :=TRUE ;
+							Output.SkillOutput[4].Ready := FALSE;
+							
+						END_IF
+	
+	
+	           	80:         // Unblock;
+						MoverInfo[MoverNo].blocked := FALSE;
+						MoverInterface[Moverno].Buddyenable := FALSE;
+						Output.SkillOutput[4].busy  :=FALSE ;
+						Output.SkillOutput[4].Done	:= TRUE;
+						
+						state := 81;
+						
+	       		81:     //warten bis execute zurückgezogen
+						Output.SkillOutput[4].Done	:= TRUE;
+						IF NOT(Input.SkillInput[4].Execute) THEN
+							state:=20; 
+							Output.SkillOutput[4].Done := FALSE;
+						END_IF       
+				
+
+
+				85:		//Initialization
+						//IF NOT GVL.ClientExecute THEN
+						InitMoverNo := AwaitingReservationAxis;
+						state := 86;
+						Output.SkillOutput[0].Error := FALSE;
+						//END_IF
+				86: 	
+						state := 87;
+						FOR i := 1 TO grpcnt DO
+							IF MoverInfo[i].reserved THEN
+								state := 86;
+							END_IF
+						END_FOR
+						IF NOT MoverInfo[F_SetAxInSection(grp :=InitMoverNo-1)].reserved THEN
+						InitMoverNo := F_SetAxInSection(InitMoverNo-1);
+						ELSE
+							state := 88;
+						END_IF
+						
+				87: // alle mover unreserved
+					IF NOT (AwaitingReservationAxis = 0) THEN
+					InitMoverNo := F_SetAxInSection(grp := AwaitingReservationAxis +1);
+					state := 88;
+					Timeout(IN := FALSE);
+					END_IF
+					
+				88: //OPC COnnection
+					//IF NOT GVL.ClientExecute THEN
+							AveragedPosition := 0;
+							ClientWrite := FALSE;
+							FOR i := 1 TO 10 DO Gvl.MeasuredPosition[i] := 0;
+								
+							END_FOR
+								
+							GVL.ClientExecute := TRUE;
+							GVL.ClientModuleServerUrl 	:= Input.SkillInput[0].ParameterInput[0].StringValue;
+							GVL.ClientReadIdentifier	:= Input.SkillInput[0].ParameterInput[1].StringValue;
+							GVL.ClientWriteIdentifier 	:= Input.SkillInput[0].ParameterInput[2].StringValue;
+							GVL.ClientNamespaceIndex	:= STRING_TO_UINT (Input.SkillInput[0].ParameterInput[3].StringValue);
+							GVL.ClientNamespaceUri		:= Input.SkillInput[0].ParameterInput[4].StringValue;
+							IF GVL.ClientReadEstablished THEN
+								state := 89;
+							END_IF
+							
+							Timeout(IN := TRUE, PT := T#10S);
+							IF Timeout.Q THEN
+								Timeout(IN := FALSE);
+							state := 107;
+							Output.SkillOutput[0].Busy := FALSE;
+							Output.SkillOutput[0].Error := TRUE;
+								
+							END_IF
+					//END_IF
+					
+				89: MoverInfo[InitMoverNo].reserved := TRUE;
+					fbTransport(execute := TRUE, AxisNo := InitMoverNo,RequestPosition := F_SetInSection(WaitingAbsPosition - 5.5* WaySectionGap), requestvelo := maxvelo);
+					IF MoverInterface[InitMoverNo].Targetpos = F_SetInSection(WaitingAbsPosition - 5.5* WaySectionGap) THEN
+                  		state := 90;
+					END_IF
+				90: fbTransport();
+					IF fbTransport.done THEN
+						state := 91;
+						fbTransport(reset := TRUE);
+					END_IF
+				91:	
+					fbTransport(execute := TRUE, AxisNo := InitMoverNo,RequestPosition := WaitingAbsPosition + 2.5* WaySectionGap, requestvelo := initvelo);
+					IF MoverInterface[InitMoverNo].Targetpos = WaitingAbsPosition + 2.5* WaySectionGap THEN
+                  		state := 92;
+					END_IF
+					
+				
+				92: fbTransport(); // erste suche
+					IF bInput THEN 
+					tempposition := F_SetInSection(ax[InitMoverNo*2].NcToPlc.ModuloActPos );
+					fbTransport(execute := FALSE, reset := TRUE);
+					state := 95;
+					END_IF
+					IF fbTransport.done THEN
+						IF measuredposition[1] = 0 THEN
+							state := 106;
+						ELSE
+						state := 95;
+						END_IF
+					END_IF
+				
+					
+				95: IF measuredcycles = measurementCycles THEN
+						state  := 100;
+					ELSE					
+					//in position fahren
+					fbTransport(execute := TRUE, AxisNo := InitMoverNo, RequestPosition := F_SetInSection(Tempposition + ((EXPT(-1,measuredcycles)) * 100)),requestvelo := 2000);
+					IF NOT bInput AND fbTransport.done THEN
+						
+					state := 96;
+					END_IF
+					END_IF
+					
+				96: //Messung
+					fbTransport(execute := TRUE, AxisNo := InitMoverNo, RequestPosition := F_SetInSection(Tempposition - ((EXPT(-1,measuredcycles)) * 300)) ,requestvelo := 50);
+					IF bInput THEN
+					MeasuredPosition[measuredcycles +1] := ax[2*InitMoverNo].NcToPlc.ModuloActPos;
+					measuredcycles := measuredcycles +1;
+					fbTransport(execute := FALSE, Reset := TRUE);
+					state := 95;
+					END_IF
+					IF fbTransport.done THEN
+						state := 95;
+						repeatcounter := repeatcounter + 1;
+					END_IF
+					IF Repeatcounter > Measurementcycles + 20 THEN
+						
+							state := 107;
+							Output.SkillOutput[0].Busy := FALSE;
+							Output.SkillOutput[0].Error := TRUE;
+							
+					END_IF
+					
+				100: 
+						i := 1;
+						state := 103;
+				103: 
+					IF i <= measurementCycles THEN
+						AveragedPosition := AveragedPosition + (EXPT(measurementCycles,-1) * ( measuredposition[i]));
+						i := i+1;
+					ELSE
+						fbTransport(reset := TRUE, execute := FALSE);
+						state := 105;
+						Timeout(IN := FALSE);
+						AveragedPosition := F_SetInSection(AveragedPosition - 33.5);					
+					END_IF
+				105: 
+					fbTransport(execute := TRUE, AxisNo := InitMoverNo, RequestPosition := AveragedPosition);
+					IF fbTransport.done THEN
+						state := 106;
+						Timeout(IN := FALSE);
+						fbTransport(reset := TRUE);
+					END_IF
+				106: 	ClientWrite := TRUE;
+						Timeout(IN := TRUE, PT := T#100S);
+							IF Timeout.Q THEN
+								Timeout(IN := FALSE);
+							state := 1070;
+							Output.SkillOutput[0].Busy := FALSE;
+							Output.SkillOutput[0].Error := TRUE;
+								
+							END_IF
+						IF GVL.ClientDone THEN
+						
+					 	state := 107;
+						OUTput.SkillOutput[0].Done := TRUE;
+						OUTput.SkillOutput[0].busy := FALSE; 
+					 	END_IF
+			    107:	//auf execute zurückziehen warten 
+						ClientExecute := FALSE;
+						fbTransport(reset := TRUE);
+						IF NOT Input.SkillInput[0].Execute THEN
+						MoverInfo[InitMoverNo].reserved := FALSE;
+						OUTput.SkillOutput[0].Done := FALSE;
+						Output.SkillOutput[0].Busy := FALSE;
+						state := 1;
+						measuredcycles := 0;
+						repeatcounter := 0;
+						END_IF
+					
+					 
+							  
+						
+	END_CASE
+	
+ELSE //SUPPRESSED!
+	fbSuppressedTransport(
+	surpressall := TRUE,	
+	execute:= TRUE, 
+	RequestPosition:= MoverInfo[MoverNo].SurpressedPosition, 
+	AxisNo:= MoverNo, 
+	ready=> , 
+	error=> , 
+	busy=> , 
+	done=> );
+	IF fbSuppressedTransport.done THEN
+		fbTransport.reset := TRUE;
+		MoverInfo[MoverNo].surpressed := FALSE;
+				
+	END_IF
+END_IF
+
+ELSE
+	IF restartstate = 2 THEN
+		state := 0;
+		fbTransport(reset := TRUE);
+		restartstate := 3;
+		moverno := 0;
+	END_IF
+END_IF
+
+Output.ConnectionTestOutput := INput.ConnectionTestInput;]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

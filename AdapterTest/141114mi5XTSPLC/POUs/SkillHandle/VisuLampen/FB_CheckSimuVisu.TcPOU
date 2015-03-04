@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_CheckSimuVisu" Id="{f49d05cf-e3b5-4567-a5ac-d31aa37c2c3e}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CheckSimuVisu
+VAR_INPUT
+	LampPosition: LREAL;
+	CheckMoverNo: INT;
+	Execute: BOOL;
+END_VAR
+VAR_OUTPUT
+	Lamp	: BOOL;
+	
+END_VAR
+VAR
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF Execute THEN
+	LAMP := FALSE;
+		IF MoverInfo[CheckMoverNo].postposition>MoverInfo[CheckMoverNo].preposition 
+		THEN
+				//DER RESERVIERTE BEREICH GEHT NICHT ÜBER NULL:	
+					
+					// gesamter bereich umschlungen?
+					IF LampPosition >  MoverInfo[CheckMoverNo].preposition AND LampPosition <= MoverInfo[CheckMoverNo].PostPosition THEN
+						Lamp:= TRUE;
+					END_IF
+				
+				ELSE
+				//DER RESERVIERTE BEREICH GEHT ÜBER NULL!
+				//Bereich 1: 0 bis Postpos:
+					// Grenze in Bereich?
+					IF((LampPosition>=0.0) AND (LampPosition<=MoverInfo[CheckMoverNo].postposition)) 
+						THEN 
+							Lamp := TRUE;
+								
+					END_IF
+				
+				//Bereich 2: Prepos bis 4000
+					// Grenze in Bereich?
+					IF((LampPosition>=MoverInfo[CheckMoverNo].preposition) AND (LampPosition<=raillength)) 
+						THEN 
+							Lamp := TRUE;
+					END_IF	
+		END_IF
+				
+END_IF
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

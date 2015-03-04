@@ -1,0 +1,508 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_IOLink" Id="{b73c4c33-5f96-4484-b8e0-ebe3e7f76635}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_IOLink
+VAR_INPUT
+	goon : BOOL  := TRUE;
+	inputs: MNG_Application_Inputs_32Bit;
+	
+	
+END_VAR
+VAR_OUTPUT
+	outputs: MNG_Application_Outputs_32Bit;
+END_VAR
+VAR
+	timer: ARRAY[1..6] OF Tc2_Standard.TON;
+	state: ARRAY[1..6] OF INT := [0, 0, 0, 0, 0, 0];
+	deltaMover: ARRAY[1..6] OF LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Application code follows here:
+
+IF goon THEN
+
+outputs.Fahrachse1_00_ChainDrvActual := GVL.ax[1].NcToPlc.SetPos/1000;
+outputs.Fahrachse2_00_ChainDrvActual := GVL.ax[2].NcToPlc.SetPos/1000;
+outputs.Fahrachse3_00_ChainDrvActual := GVL.ax[3].NcToPlc.SetPos/1000;
+outputs.Fahrachse4_00_ChainDrvActual := GVL.ax[4].NcToPlc.SetPos/1000;
+outputs.Fahrachse5_00_ChainDrvActual := GVL.ax[5].NcToPlc.SetPos/1000;
+outputs.Fahrachse6_00_ChainDrvActual := GVL.ax[6].NcToPlc.SetPos/1000;
+
+
+outputs.LED_0_00_00_on1 := GVL.LampInterface[1][1];
+outputs.LED_0_05_00_on1 := GVL.LampInterface[1][2];
+outputs.LED_0_10_00_on1 := GVL.LampInterface[1][3];
+outputs.LED_0_15_00_on1 := GVL.LampInterface[1][4];
+outputs.LED_0_20_00_on1 := GVL.LampInterface[1][5];
+outputs.LED_0_25_00_on1 := GVL.LampInterface[1][6];
+outputs.LED_0_30_00_on1 := GVL.LampInterface[1][7];
+outputs.LED_0_35_00_on1 := GVL.LampInterface[1][8];
+outputs.LED_0_40_00_on1 := GVL.LampInterface[1][9];
+outputs.LED_0_45_00_on1 := GVL.LampInterface[1][10];
+outputs.LED_0_50_00_on1 := GVL.LampInterface[1][11];
+outputs.LED_0_55_00_on1 := GVL.LampInterface[1][12];
+outputs.LED_0_60_00_on1 := GVL.LampInterface[1][13];
+outputs.LED_0_65_00_on1 := GVL.LampInterface[1][14];
+outputs.LED_0_70_00_on1 := GVL.LampInterface[1][15];
+outputs.LED_0_75_00_on1 := GVL.LampInterface[1][16];
+outputs.LED_0_80_00_on1 := GVL.LampInterface[1][17];
+outputs.LED_0_85_00_on1 := GVL.LampInterface[1][18];
+outputs.LED_0_90_00_on1 := GVL.LampInterface[1][19];
+outputs.LED_0_95_00_on1 := GVL.LampInterface[1][20];
+outputs.LED_1_00_00_on1 := GVL.LampInterface[1][21];
+outputs.LED_1_05_00_on1 := GVL.LampInterface[1][22];
+outputs.LED_1_10_00_on1 := GVL.LampInterface[1][23];
+outputs.LED_1_15_00_on1 := GVL.LampInterface[1][24];
+outputs.LED_1_20_00_on1 := GVL.LampInterface[1][25];
+outputs.LED_1_25_00_on1 := GVL.LampInterface[1][26];
+outputs.LED_1_30_00_on1 := GVL.LampInterface[1][27];
+outputs.LED_1_35_00_on1 := GVL.LampInterface[1][28];
+outputs.LED_1_40_00_on1 := GVL.LampInterface[1][29];
+outputs.LED_1_45_00_on1 := GVL.LampInterface[1][30];
+(*
+outputs.LED_1_50_00_on1 := GVL.LampInterface[1][31];
+outputs.LED_1_55_00_on1 := GVL.LampInterface[1][32];
+outputs.LED_1_60_00_on1 := GVL.LampInterface[1][33];
+outputs.LED_1_65_00_on1 := GVL.LampInterface[1][34];
+outputs.LED_1_70_00_on1 := GVL.LampInterface[1][35];
+outputs.LED_1_75_00_on1 := GVL.LampInterface[1][36];
+outputs.LED_1_80_00_on1 := GVL.LampInterface[1][37];
+outputs.LED_1_85_00_on1 := GVL.LampInterface[1][38];
+outputs.LED_1_90_00_on1 := GVL.LampInterface[1][39];
+outputs.LED_1_95_00_on1 := GVL.LampInterface[1][40];
+*)
+outputs.LED_2_00_00_on1 := GVL.LampInterface[1][41];
+outputs.LED_2_05_00_on1 := GVL.LampInterface[1][42];
+outputs.LED_2_10_00_on1 := GVL.LampInterface[1][43];
+outputs.LED_2_15_00_on1 := GVL.LampInterface[1][44];
+outputs.LED_2_20_00_on1 := GVL.LampInterface[1][45];
+outputs.LED_2_25_00_on1 := GVL.LampInterface[1][46];
+outputs.LED_2_30_00_on1 := GVL.LampInterface[1][47];
+outputs.LED_2_35_00_on1 := GVL.LampInterface[1][48];
+outputs.LED_2_40_00_on1 := GVL.LampInterface[1][49];
+outputs.LED_2_45_00_on1 := GVL.LampInterface[1][50];
+outputs.LED_2_50_00_on1 := GVL.LampInterface[1][51];
+outputs.LED_2_55_00_on1 := GVL.LampInterface[1][52];
+outputs.LED_2_60_00_on1 := GVL.LampInterface[1][53];
+outputs.LED_2_65_00_on1 := GVL.LampInterface[1][54];
+outputs.LED_2_70_00_on1 := GVL.LampInterface[1][55];
+outputs.LED_2_75_00_on1 := GVL.LampInterface[1][56];
+outputs.LED_2_80_00_on1 := GVL.LampInterface[1][57];
+outputs.LED_2_85_00_on1 := GVL.LampInterface[1][58];
+outputs.LED_2_90_00_on1 := GVL.LampInterface[1][59];
+outputs.LED_2_95_00_on1 := GVL.LampInterface[1][60];
+outputs.LED_3_00_00_on1 := GVL.LampInterface[1][61];
+outputs.LED_3_05_00_on1 := GVL.LampInterface[1][62];
+outputs.LED_3_10_00_on1 := GVL.LampInterface[1][63];
+outputs.LED_3_15_00_on1 := GVL.LampInterface[1][64];
+outputs.LED_3_20_00_on1 := GVL.LampInterface[1][65];
+outputs.LED_3_25_00_on1 := GVL.LampInterface[1][66];
+outputs.LED_3_30_00_on1 := GVL.LampInterface[1][67];
+outputs.LED_3_35_00_on1 := GVL.LampInterface[1][68];
+outputs.LED_3_40_00_on1 := GVL.LampInterface[1][69];
+outputs.LED_3_45_00_on1 := GVL.LampInterface[1][70];
+(*
+outputs.LED_3_50_00_on1 := GVL.LampInterface[1][71];
+outputs.LED_3_55_00_on1 := GVL.LampInterface[1][72];
+outputs.LED_3_60_00_on1 := GVL.LampInterface[1][73];
+outputs.LED_3_65_00_on1 := GVL.LampInterface[1][74];
+outputs.LED_3_70_00_on1 := GVL.LampInterface[1][75];
+outputs.LED_3_75_00_on1 := GVL.LampInterface[1][76];
+outputs.LED_3_80_00_on1 := GVL.LampInterface[1][77];
+outputs.LED_3_85_00_on1 := GVL.LampInterface[1][78];
+outputs.LED_3_90_00_on1 := GVL.LampInterface[1][79];
+outputs.LED_3_95_00_on1 := GVL.LampInterface[1][80];
+*)
+
+// Lampe 2:
+
+outputs.LED_0_00_00_on2 := GVL.LampInterface[2][1];;
+outputs.LED_0_05_00_on2 := GVL.LampInterface[2][2];;
+outputs.LED_0_10_00_on2 := GVL.LampInterface[2][3];;
+outputs.LED_0_15_00_on2 := GVL.LampInterface[2][4];;
+outputs.LED_0_20_00_on2 := GVL.LampInterface[2][5];;
+outputs.LED_0_25_00_on2 := GVL.LampInterface[2][6];;
+outputs.LED_0_30_00_on2 := GVL.LampInterface[2][7];;
+outputs.LED_0_35_00_on2 := GVL.LampInterface[2][8];;
+outputs.LED_0_40_00_on2 := GVL.LampInterface[2][9];;
+outputs.LED_0_45_00_on2 := GVL.LampInterface[2][10];
+outputs.LED_0_50_00_on2 := GVL.LampInterface[2][11];
+outputs.LED_0_55_00_on2 := GVL.LampInterface[2][12];
+outputs.LED_0_60_00_on2 := GVL.LampInterface[2][13];
+outputs.LED_0_65_00_on2 := GVL.LampInterface[2][14];
+outputs.LED_0_70_00_on2 := GVL.LampInterface[2][15];
+outputs.LED_0_75_00_on2 := GVL.LampInterface[2][16];
+outputs.LED_0_80_00_on2 := GVL.LampInterface[2][17];
+outputs.LED_0_85_00_on2 := GVL.LampInterface[2][18];
+outputs.LED_0_90_00_on2 := GVL.LampInterface[2][19];
+outputs.LED_0_95_00_on2 := GVL.LampInterface[2][20];
+outputs.LED_1_00_00_on2 := GVL.LampInterface[2][21];
+outputs.LED_1_05_00_on2 := GVL.LampInterface[2][22];
+outputs.LED_1_10_00_on2 := GVL.LampInterface[2][23];
+outputs.LED_1_15_00_on2 := GVL.LampInterface[2][24];
+outputs.LED_1_20_00_on2 := GVL.LampInterface[2][25];
+outputs.LED_1_25_00_on2 := GVL.LampInterface[2][26];
+outputs.LED_1_30_00_on2 := GVL.LampInterface[2][27];
+outputs.LED_1_35_00_on2 := GVL.LampInterface[2][28];
+outputs.LED_1_40_00_on2 := GVL.LampInterface[2][29];
+outputs.LED_1_45_00_on2 := GVL.LampInterface[2][30];
+(*                                                 
+outputs.LED_1_50_00_on2 := GVL.LampInterface[2][31];
+outputs.LED_1_55_00_on2 := GVL.LampInterface[2][32];
+outputs.LED_1_60_00_on2 := GVL.LampInterface[2][33];
+outputs.LED_1_65_00_on2 := GVL.LampInterface[2][34];
+outputs.LED_1_70_00_on2 := GVL.LampInterface[2][35];
+outputs.LED_1_75_00_on2 := GVL.LampInterface[2][36];
+outputs.LED_1_80_00_on2 := GVL.LampInterface[2][37];
+outputs.LED_1_85_00_on2 := GVL.LampInterface[2][38];
+outputs.LED_1_90_00_on2 := GVL.LampInterface[2][39];
+outputs.LED_1_95_00_on2 := GVL.LampInterface[2][40];
+*)                                                 
+outputs.LED_2_00_00_on2 := GVL.LampInterface[2][41];
+outputs.LED_2_05_00_on2 := GVL.LampInterface[2][42];
+outputs.LED_2_10_00_on2 := GVL.LampInterface[2][43];
+outputs.LED_2_15_00_on2 := GVL.LampInterface[2][44];
+outputs.LED_2_20_00_on2 := GVL.LampInterface[2][45];
+outputs.LED_2_25_00_on2 := GVL.LampInterface[2][46];
+outputs.LED_2_30_00_on2 := GVL.LampInterface[2][47];
+outputs.LED_2_35_00_on2 := GVL.LampInterface[2][48];
+outputs.LED_2_40_00_on2 := GVL.LampInterface[2][49];
+outputs.LED_2_45_00_on2 := GVL.LampInterface[2][50];
+outputs.LED_2_50_00_on2 := GVL.LampInterface[2][51];
+outputs.LED_2_55_00_on2 := GVL.LampInterface[2][52];
+outputs.LED_2_60_00_on2 := GVL.LampInterface[2][53];
+outputs.LED_2_65_00_on2 := GVL.LampInterface[2][54];
+outputs.LED_2_70_00_on2 := GVL.LampInterface[2][55];
+outputs.LED_2_75_00_on2 := GVL.LampInterface[2][56];
+outputs.LED_2_80_00_on2 := GVL.LampInterface[2][57];
+outputs.LED_2_85_00_on2 := GVL.LampInterface[2][58];
+outputs.LED_2_90_00_on2 := GVL.LampInterface[2][59];
+outputs.LED_2_95_00_on2 := GVL.LampInterface[2][60];
+outputs.LED_3_00_00_on2 := GVL.LampInterface[2][61];
+outputs.LED_3_05_00_on2 := GVL.LampInterface[2][62];
+outputs.LED_3_10_00_on2 := GVL.LampInterface[2][63];
+outputs.LED_3_15_00_on2 := GVL.LampInterface[2][64];
+outputs.LED_3_20_00_on2 := GVL.LampInterface[2][65];
+outputs.LED_3_25_00_on2 := GVL.LampInterface[2][66];
+outputs.LED_3_30_00_on2 := GVL.LampInterface[2][67];
+outputs.LED_3_35_00_on2 := GVL.LampInterface[2][68];
+outputs.LED_3_40_00_on2 := GVL.LampInterface[2][69];
+outputs.LED_3_45_00_on2 := GVL.LampInterface[2][70];
+(*                                                 
+outputs.LED_3_50_00_on2 := GVL.LampInterface[2][71];
+outputs.LED_3_55_00_on2 := GVL.LampInterface[2][72];
+outputs.LED_3_60_00_on2 := GVL.LampInterface[2][73];
+outputs.LED_3_65_00_on2 := GVL.LampInterface[2][74];
+outputs.LED_3_70_00_on2 := GVL.LampInterface[2][75];
+outputs.LED_3_75_00_on2 := GVL.LampInterface[2][76];
+outputs.LED_3_80_00_on2 := GVL.LampInterface[2][77];
+outputs.LED_3_85_00_on2 := GVL.LampInterface[2][78];
+outputs.LED_3_90_00_on2 := GVL.LampInterface[2][79];
+outputs.LED_3_95_00_on2 := GVL.LampInterface[2][80];
+*)
+
+// Lampe 3:
+
+outputs.LED_0_00_00_on3 := GVL.LampInterface[3][1];;
+outputs.LED_0_05_00_on3 := GVL.LampInterface[3][2];;
+outputs.LED_0_10_00_on3 := GVL.LampInterface[3][3];;
+outputs.LED_0_15_00_on3 := GVL.LampInterface[3][4];;
+outputs.LED_0_20_00_on3 := GVL.LampInterface[3][5];;
+outputs.LED_0_25_00_on3 := GVL.LampInterface[3][6];;
+outputs.LED_0_30_00_on3 := GVL.LampInterface[3][7];;
+outputs.LED_0_35_00_on3 := GVL.LampInterface[3][8];;
+outputs.LED_0_40_00_on3 := GVL.LampInterface[3][9];;
+outputs.LED_0_45_00_on3 := GVL.LampInterface[3][10];
+outputs.LED_0_50_00_on3 := GVL.LampInterface[3][11];
+outputs.LED_0_55_00_on3 := GVL.LampInterface[3][12];
+outputs.LED_0_60_00_on3 := GVL.LampInterface[3][13];
+outputs.LED_0_65_00_on3 := GVL.LampInterface[3][14];
+outputs.LED_0_70_00_on3 := GVL.LampInterface[3][15];
+outputs.LED_0_75_00_on3 := GVL.LampInterface[3][16];
+outputs.LED_0_80_00_on3 := GVL.LampInterface[3][17];
+outputs.LED_0_85_00_on3 := GVL.LampInterface[3][18];
+outputs.LED_0_90_00_on3 := GVL.LampInterface[3][19];
+outputs.LED_0_95_00_on3 := GVL.LampInterface[3][20];
+outputs.LED_1_00_00_on3 := GVL.LampInterface[3][21];
+outputs.LED_1_05_00_on3 := GVL.LampInterface[3][22];
+outputs.LED_1_10_00_on3 := GVL.LampInterface[3][23];
+outputs.LED_1_15_00_on3 := GVL.LampInterface[3][24];
+outputs.LED_1_20_00_on3 := GVL.LampInterface[3][25];
+outputs.LED_1_25_00_on3 := GVL.LampInterface[3][26];
+outputs.LED_1_30_00_on3 := GVL.LampInterface[3][27];
+outputs.LED_1_35_00_on3 := GVL.LampInterface[3][28];
+outputs.LED_1_40_00_on3 := GVL.LampInterface[3][29];
+outputs.LED_1_45_00_on3 := GVL.LampInterface[3][30];
+(*                                                 
+outputs.LED_1_50_00_on3 := GVL.LampInterface[3][31];
+outputs.LED_1_55_00_on3 := GVL.LampInterface[3][32];
+outputs.LED_1_60_00_on3 := GVL.LampInterface[3][33];
+outputs.LED_1_65_00_on3 := GVL.LampInterface[3][34];
+outputs.LED_1_70_00_on3 := GVL.LampInterface[3][35];
+outputs.LED_1_75_00_on3 := GVL.LampInterface[3][36];
+outputs.LED_1_80_00_on3 := GVL.LampInterface[3][37];
+outputs.LED_1_85_00_on3 := GVL.LampInterface[3][38];
+outputs.LED_1_90_00_on3 := GVL.LampInterface[3][39];
+outputs.LED_1_95_00_on3 := GVL.LampInterface[3][40];
+*)                                                 
+outputs.LED_2_00_00_on3 := GVL.LampInterface[3][41];
+outputs.LED_2_05_00_on3 := GVL.LampInterface[3][42];
+outputs.LED_2_10_00_on3 := GVL.LampInterface[3][43];
+outputs.LED_2_15_00_on3 := GVL.LampInterface[3][44];
+outputs.LED_2_20_00_on3 := GVL.LampInterface[3][45];
+outputs.LED_2_25_00_on3 := GVL.LampInterface[3][46];
+outputs.LED_2_30_00_on3 := GVL.LampInterface[3][47];
+outputs.LED_2_35_00_on3 := GVL.LampInterface[3][48];
+outputs.LED_2_40_00_on3 := GVL.LampInterface[3][49];
+outputs.LED_2_45_00_on3 := GVL.LampInterface[3][50];
+outputs.LED_2_50_00_on3 := GVL.LampInterface[3][51];
+outputs.LED_2_55_00_on3 := GVL.LampInterface[3][52];
+outputs.LED_2_60_00_on3 := GVL.LampInterface[3][53];
+outputs.LED_2_65_00_on3 := GVL.LampInterface[3][54];
+outputs.LED_2_70_00_on3 := GVL.LampInterface[3][55];
+outputs.LED_2_75_00_on3 := GVL.LampInterface[3][56];
+outputs.LED_2_80_00_on3 := GVL.LampInterface[3][57];
+outputs.LED_2_85_00_on3 := GVL.LampInterface[3][58];
+outputs.LED_2_90_00_on3 := GVL.LampInterface[3][59];
+outputs.LED_2_95_00_on3 := GVL.LampInterface[3][60];
+outputs.LED_3_00_00_on3 := GVL.LampInterface[3][61];
+outputs.LED_3_05_00_on3 := GVL.LampInterface[3][62];
+outputs.LED_3_10_00_on3 := GVL.LampInterface[3][63];
+outputs.LED_3_15_00_on3 := GVL.LampInterface[3][64];
+outputs.LED_3_20_00_on3 := GVL.LampInterface[3][65];
+outputs.LED_3_25_00_on3 := GVL.LampInterface[3][66];
+outputs.LED_3_30_00_on3 := GVL.LampInterface[3][67];
+outputs.LED_3_35_00_on3 := GVL.LampInterface[3][68];
+outputs.LED_3_40_00_on3 := GVL.LampInterface[3][69];
+outputs.LED_3_45_00_on3 := GVL.LampInterface[3][70];
+(*                                                 
+outputs.LED_3_50_00_on3 := GVL.LampInterface[3][71];
+outputs.LED_3_55_00_on3 := GVL.LampInterface[3][72];
+outputs.LED_3_60_00_on3 := GVL.LampInterface[3][73];
+outputs.LED_3_65_00_on3 := GVL.LampInterface[3][74];
+outputs.LED_3_70_00_on3 := GVL.LampInterface[3][75];
+outputs.LED_3_75_00_on3 := GVL.LampInterface[3][76];
+outputs.LED_3_80_00_on3 := GVL.LampInterface[3][77];
+outputs.LED_3_85_00_on3 := GVL.LampInterface[3][78];
+outputs.LED_3_90_00_on3 := GVL.LampInterface[3][79];
+outputs.LED_3_95_00_on3 := GVL.LampInterface[3][80];
+*)
+
+
+END_IF
+
+
+CASE state[1] OF
+	0: IF inputs.DetectionCookieAdapter1_00_IR THEN
+			state[1] := 10;
+	   END_IF
+	   outputs.Cocktail_Holder1_00_GRIP := FALSE;
+	10:
+		timer[1].PT := INT_TO_TIME(5000) ;
+		timer[1](IN := FALSE);
+		timer[1](IN := TRUE);
+		state[1] := 20;
+	20:
+		timer[1]();
+		IF timer[1].Q THEN
+			outputs.Cocktail_Holder1_00_GRIP := TRUE;
+		END_IF
+				
+END_CASE
+
+CASE state[2] OF
+	0: IF inputs.DetectionCookieAdapter2_00_IR THEN
+			state[2] := 10;
+	   END_IF
+	   outputs.Cocktail_Holder2_00_GRIP := FALSE;
+	10:
+		timer[2].PT := INT_TO_TIME(5000) ;
+		timer[2](IN := FALSE);
+		timer[2](IN := TRUE);
+		state[2] := 20;
+	20:
+		timer[2]();
+		IF timer[2].Q THEN
+			outputs.Cocktail_Holder2_00_GRIP := TRUE;
+		END_IF
+				
+END_CASE
+
+CASE state[3] OF
+	0: IF inputs.DetectionCookieAdapter3_00_IR THEN
+			state[3] := 10;
+	   END_IF
+	   outputs.Cocktail_Holder3_00_GRIP := FALSE;
+	10:
+		timer[3].PT := INT_TO_TIME(5000) ;
+		timer[3](IN := FALSE);
+		timer[3](IN := TRUE);
+		state[3] := 20;
+	20:
+		timer[3]();
+		IF timer[3].Q THEN
+			outputs.Cocktail_Holder3_00_GRIP := TRUE;
+		END_IF
+				
+END_CASE
+
+CASE state[4] OF
+	0: IF inputs.DetectionCookieAdapter4_00_IR THEN
+			state[4] := 10;
+	   END_IF
+	   outputs.Cocktail_Holder4_00_GRIP := FALSE;
+	10:
+		timer[4].PT := INT_TO_TIME(5000) ;
+		timer[4](IN := FALSE);
+		timer[4](IN := TRUE);
+		state[4] := 20;
+	20:
+		timer[4]();
+		IF timer[4].Q THEN
+			outputs.Cocktail_Holder4_00_GRIP := TRUE;
+		END_IF
+END_CASE
+		
+CASE state[5] OF
+	0: IF inputs.DetectionCookieAdapter5_00_IR THEN
+			state[5] := 10;
+	   END_IF
+	   outputs.Cocktail_Holder5_00_GRIP := FALSE;
+	10:
+		timer[5].PT := INT_TO_TIME(5000) ;
+		timer[5](IN := FALSE);
+		timer[5](IN := TRUE);
+		state[5] := 20;
+	20:
+		timer[5]();
+		IF timer[5].Q THEN
+			outputs.Cocktail_Holder5_00_GRIP := TRUE;
+		END_IF
+				
+END_CASE
+
+CASE state[6] OF
+	0: IF inputs.DetectionCookieAdapter6_00_IR THEN
+			state[6] := 10;
+	   END_IF
+	   outputs.Cocktail_Holder6_00_GRIP := FALSE;
+	10:
+		timer[6].PT := INT_TO_TIME(5000) ;
+		timer[6](IN := FALSE);
+		timer[6](IN := TRUE);
+		state[6] := 20;
+	20:
+		timer[6]();
+		IF timer[6].Q THEN
+			outputs.Cocktail_Holder6_00_GRIP := TRUE;
+		END_IF
+				
+END_CASE
+
+deltaMover[6] := GVL.ax[6].NcToPlc.SetPos/10-GVL.ax[5].NcToPlc.SetPos/10;
+outputs.Cocktail_Holder_6_00_ACT_POS := 0.32 - 0.02667*deltaMover[6];
+IF deltaMover[6] > 12 THEN
+	outputs.Cocktail_Holder_6_00_ACT_POS := 0;
+END_IF
+
+deltaMover[5] := GVL.ax[5].NcToPlc.SetPos/10-GVL.ax[4].NcToPlc.SetPos/10;
+outputs.Cocktail_Holder_5_00_ACT_POS := 0.32 - 0.02667*deltaMover[5];
+IF deltaMover[5] > 12 THEN
+	outputs.Cocktail_Holder_5_00_ACT_POS := 0;
+END_IF
+
+deltaMover[4] := GVL.ax[4].NcToPlc.SetPos/10-GVL.ax[3].NcToPlc.SetPos/10;
+outputs.Cocktail_Holder_4_00_ACT_POS := 0.32 - 0.02667*deltaMover[4];
+IF deltaMover[4] > 12 THEN
+	outputs.Cocktail_Holder_4_00_ACT_POS := 0;
+END_IF
+
+deltaMover[3] := GVL.ax[3].NcToPlc.SetPos/10-GVL.ax[2].NcToPlc.SetPos/10;
+outputs.Cocktail_Holder_3_00_ACT_POS := 0.32 - 0.02667*deltaMover[3];
+IF deltaMover[3] > 12 THEN
+	outputs.Cocktail_Holder_3_00_ACT_POS := 0;
+END_IF
+
+deltaMover[2] := GVL.ax[2].NcToPlc.SetPos/10-GVL.ax[1].NcToPlc.SetPos/10;
+outputs.Cocktail_Holder_2_00_ACT_POS := 0.32 - 0.02667*deltaMover[2];
+IF deltaMover[2] > 12 THEN
+	outputs.Cocktail_Holder_2_00_ACT_POS := 0;
+END_IF
+
+deltaMover[1] := GVL.ax[1].NcToPlc.SetPos/10-GVL.ax[6].NcToPlc.SetPos/10+400;
+outputs.Cocktail_Holder_1_00_ACT_POS := 0.32 - 0.02667*deltaMover[1];
+IF deltaMover[1] > 12 THEN
+	outputs.Cocktail_Holder_1_00_ACT_POS := 0;
+END_IF
+// Moverpaar 1:
+//linke hälfte
+outputs.Seitenwand_00_reserved_colour02 := MoverInfo[1].reserved;
+outputs.Seitenwand_00_blocked_colour02	:= MoverInfo[1].blocked;
+outputs.Seitenwand_00_error_colour02	:= MoverInfo[1].surpressed;
+outputs.Seitenwand_00_reserved_colour02 := MoverInfo[1].reserved;
+outputs.Seitenwand_00_blocked_colour02	:= MoverInfo[1].blocked;
+//surpressed nur auf der einen seite ** outputs.Seitenwand_00_error_colour02	:= MoverInfo[1].surpressed;
+//rechte hälfte
+outputs.Seitenwand0_00_reserved_colour02 := MoverInfo[1].reserved;
+outputs.Seitenwand0_00_blocked_colour02	:= MoverInfo[1].blocked;
+outputs.Seitenwand0_00_error_colour02	:= MoverInfo[1].surpressed;
+outputs.Seitenwand0_00_reserved_colour02 := MoverInfo[1].reserved;
+outputs.Seitenwand0_00_blocked_colour02	:= MoverInfo[1].blocked;
+outputs.Seitenwand0_00_error_colour02	:= MoverInfo[1].surpressed;
+
+//moverpaar 2:
+
+//linke hälfte
+outputs.Seitenwand_00_reserved_colour04 := MoverInfo[2].reserved;
+outputs.Seitenwand_00_blocked_colour04	:= MoverInfo[2].blocked;
+outputs.Seitenwand_00_error_colour04	:= MoverInfo[2].surpressed;
+outputs.Seitenwand_00_reserved_colour04 := MoverInfo[2].reserved;
+outputs.Seitenwand_00_blocked_colour04	:= MoverInfo[2].blocked;
+//surpressed nur auf der einen seite ** outputs.Seitenwand_00_error_colour02	:= MoverInfo[2].surpressed;
+//rechte hälfte
+outputs.Seitenwand0_00_reserved_colour04 := MoverInfo[2].reserved;
+outputs.Seitenwand0_00_blocked_colour04	:= MoverInfo[2].blocked;
+outputs.Seitenwand0_00_error_colour04	:= MoverInfo[2].surpressed;
+outputs.Seitenwand0_00_reserved_colour04 := MoverInfo[2].reserved;
+outputs.Seitenwand0_00_blocked_colour04	:= MoverInfo[2].blocked;
+outputs.Seitenwand0_00_error_colour04	:= MoverInfo[2].surpressed;
+
+//moverpaar 3:
+
+//linke hälfte
+outputs.Seitenwand_00_reserved_colour06 := MoverInfo[3].reserved;
+outputs.Seitenwand_00_blocked_colour06	:= MoverInfo[3].blocked;
+outputs.Seitenwand_00_error_colour06	:= MoverInfo[3].surpressed;
+outputs.Seitenwand_00_reserved_colour06 := MoverInfo[3].reserved;
+outputs.Seitenwand_00_blocked_colour06	:= MoverInfo[3].blocked;
+//surpressed nur auf der einen seite ** outputs.Seitenwand_00_error_colour02	:= MoverInfo[3].surpressed;
+//rechte hälfte
+outputs.Seitenwand0_00_reserved_colour06 := MoverInfo[3].reserved;
+outputs.Seitenwand0_00_blocked_colour06	:= MoverInfo[3].blocked;
+outputs.Seitenwand0_00_error_colour06	:= MoverInfo[3].surpressed;
+outputs.Seitenwand0_00_reserved_colour06 := MoverInfo[3].reserved;
+outputs.Seitenwand0_00_blocked_colour06	:= MoverInfo[3].blocked;
+outputs.Seitenwand0_00_error_colour06	:= MoverInfo[3].surpressed;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

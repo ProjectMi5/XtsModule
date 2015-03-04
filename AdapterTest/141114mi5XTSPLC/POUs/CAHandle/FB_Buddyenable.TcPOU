@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_Buddyenable" Id="{481ec25e-19de-4093-85c8-8a6a8fe79114}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Buddyenable
+VAR_INPUT
+	execute: BOOL;
+	axno: INT;
+	gap: LREAL;
+END_VAR
+VAR_OUTPUT
+	done: BOOL;
+	busy: BOOL;
+	masterpos: LREAL;
+	slavepos: LREAL;
+END_VAR
+VAR
+	fbMoveAbs: Tc2_MC2.MC_MoveAbsolute;
+	fbCouple: Tc2_MC2.MC_GearIn;
+	fbDeCouple: Tc2_MC2.MC_GearOut;
+	fbDeCoupleCA: Tc2_MC2.MC_GearOut;
+	state: INT;
+	targetpos: LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF Execute THEN
+		done 		:= FALSE;
+		busy 		:= TRUE;
+		CASE state OF
+			0:	masterpos   := ax[2*axno].NcToPlc.Setpos;
+				slavepos    := ax[2*axno].NcToPlc.Setpos -  couplegap;
+				state := 1999;
+				IF NOT ((masterpos-slavepos) = couplegap) THEN
+					state := 999;
+				END_IF
+				fbDeCouple(
+							Slave:= ax[2*axno-1], 
+							Execute:= FALSE, 
+							Options:= , 
+							Done=> , 
+							Busy=> , 
+							Error=> , 
+							ErrorID=> );
+				fbDeCoupleCA(
+							Slave:= ax[2*axno], 
+							Execute:= FALSE, 
+							Options:= , 
+							Done=> , 
+							Busy=> , 
+							Error=> , 
+							ErrorID=> );
+				state := 2;
+			
+			2: fbDeCouple(
+							Slave:= ax[2*axno-1], 
+							Execute:= TRUE, 
+							Options:= , 
+							Done=> , 
+							Busy=> , 
+							Error=> , 
+							ErrorID=> );
+				fbDeCoupleCA(
+							Slave:= ax[2*axno], 
+							Execute:= TRUE, 
+							Options:= , 
+							Done=> , 
+							Busy=> , 
+							Error=> , 
+							ErrorID=> );
+				IF fbDeCouple.Done AND fbDeCoupleCA.Done THEN 
+					state := 3;
+				END_IF
+			
+			3: // Position Berechnen
+				targetpos := ax[2*axno].NcToPlc.SetPos - gap;
+				fbMoveAbs(	Axis:= ax[2*axno-1], 
+							Execute:= FALSE, 							 
+							Velocity:= buddyvelo);
+				state := 4;
+				
+			4:	fbMoveAbs(	Axis:= ax[2*axno-1],Position := targetpos, 
+							Execute:= TRUE);
+				IF (* fbMoveAbs.Done AND *) ax[2*axno-1].NcToPlc.SetPos = targetpos THEN
+					
+					
+					state 		:= 5;
+				END_IF
+				IF fbMoveAbs.Error THEN
+					state := 3;
+				END_IF
+			
+				
+				
+			5: //
+				//GVL.poweredaxes[2*axno-1] := FALSE;
+				//GVL.poweredaxes[2*axno] := FALSE;
+				
+			
+			
+				
+				execute 	:= FALSE;
+				done 		:= TRUE;
+				state 		:= 0;
+			
+			
+		END_CASE
+ELSE
+state := 0;
+done := FALSE;		
+END_IF]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

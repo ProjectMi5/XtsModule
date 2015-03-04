@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="F_SetInSection" Id="{54dbd0b0-9784-4fbf-a80a-a7f9c8ed868c}">
+    <Declaration><![CDATA[FUNCTION F_SetInSection : LREAL
+VAR_INPUT
+	Position: LREAL;
+END_VAR
+VAR
+	output: LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF (Position >= raillength) THEN
+	output := position -raillength;
+ELSE
+	IF (Position < 0.0) THEN
+		output := position + raillength;
+	ELSE
+	output := Position;
+	END_IF
+END_IF
+F_SetInSection := output;
+
+
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

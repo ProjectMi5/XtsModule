@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_HaltAll" Id="{0fcf6d02-e8b4-4f2c-b703-0b6f56c1b47f}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_HaltAll
+VAR_INPUT
+	execute: BOOL;
+END_VAR
+VAR_OUTPUT
+	done: BOOL;
+	busy: BOOL;
+	error: BOOL;
+END_VAR
+VAR
+	fbhalt: ARRAY[1..grpcnt] OF MC_HaltCA(calltargetOID);
+	i: UINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+done := TRUE;
+busy := FALSE;
+error := FALSE;
+
+FOR i:=1 TO grpcnt DO
+	fbhalt[i](Axis := grp[i], Execute := execute);
+
+	IF (NOT fbhalt[i].done) THEN
+		done := FALSE;
+	END_IF
+	IF (fbhalt[i].busy) THEN
+		busy := TRUE;
+	END_IF
+	IF (fbhalt[i].Error) THEN
+		error := TRUE;
+	END_IF
+END_FOR]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

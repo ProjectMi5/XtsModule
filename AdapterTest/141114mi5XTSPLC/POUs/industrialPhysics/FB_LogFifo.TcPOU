@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_LogFifo" Id="{80c1ad8a-a105-436e-9f3f-68a73076f56a}">
+    <Declaration><![CDATA[/// Log/debug/error message fifo 
+FUNCTION_BLOCK FB_LogFifo
+VAR_INPUT
+	/// TRUE => Enable log message output, FALSE => Disable 
+	bLog: BOOL := FALSE;
+	/// Log message description string (allows the identification of log message source) 
+	sPrefix: STRING := 'Unknown::';
+	/// String message to add (write) to the fifo 
+	sMessage: STRING := '';
+	/// Error code to add (write) to the fifo 
+	nErrID: UDINT := 0;
+	/// Socket connection handle 
+	hSocket: T_HSOCKET;
+END_VAR
+VAR_OUTPUT
+	/// TRUE = New entry added or removed succesfully, FALSE = Fifo overflow or fifo empty 
+	bOk: BOOL;
+	/// String entry removed (read) from fifo 
+	sGet: T_MaxString := '';
+	/// Number of fifo entries 
+	nCount: UDINT := 0;
+END_VAR
+VAR
+	/// Basic (lower level) string buffer control function block 
+	fbBuffer: FB_StringRingBuffer;
+	/// Internal buffer memory 
+	buffer: ARRAY[0..PLCPRJ_BUFFER_SIZE] OF BYTE;
+	sSource: T_MaxString;
+	sPut: T_MaxString;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[;]]></ST>
+    </Implementation>
+    <Action Name="Remove" Id="{07499e13-3684-4295-ba54-d403807c4d61}">
+      <Implementation>
+        <ST><![CDATA[(* Removes oldest fifo entry *)
+IF nCount = 0 THEN
+	sGet := '';
+	bOk := FALSE;
+	RETURN;
+END_IF
+
+fbBuffer.A_RemoveHead( pBuffer:= ADR(buffer), cbBuffer:= SIZEOF(buffer),
+						getValue=>sGet, bOk=>bOk, nCount=>nCount );
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Message" Id="{6d6b53c6-0488-4d27-b239-f343b90dc801}">
+      <Implementation>
+        <ST><![CDATA[(* Adds new fifo entry *)
+sPut := CONCAT( CONCAT( sPrefix, sMessage ), CONCAT( '::', HSOCKET_TO_STRING(hSocket) ) );
+fbBuffer.A_AddTail( pBuffer:= ADR(buffer), cbBuffer:= SIZEOF(buffer),
+					putValue:= sPut, bOk=>bOk, nCount=>nCount );
+IF bOk THEN
+	IF bLog THEN(* Log information message *)
+		ADSLOGSTR( ADSLOG_MSGTYPE_HINT OR ADSLOG_MSGTYPE_LOG, '%s', sPut );	
+	END_IF
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Clear" Id="{c6719c44-4620-47be-8cf9-e15a44895727}">
+      <Implementation>
+        <ST><![CDATA[(* Clears all fifo entries *)
+fbBuffer.A_Reset( 	pBuffer := ADR( buffer ), cbBuffer := SIZEOF( buffer ), 
+					bOk=>bOk, nCount=>nCount, getValue=>sGet ); 
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Error" Id="{cb4f966f-4815-4f4e-9c67-d1e81fb94dc4}">
+      <Implementation>
+        <ST><![CDATA[(* Adds new fifo entry *)
+IF nErrID = 0 THEN
+	sSource := '::Error: 0x';
+ELSIF ( nErrID AND 16#80000000) = 16#80000000 THEN
+	IF nErrID = 16#80072746 THEN
+		sSource := '::Win32 error (the connection is reset by remote side): 0x';
+	ELSE
+		sSource := '::Win32 error: 0x';
+	END_IF
+ELSIF (nErrID AND 16#00008100) = 16#00008100 THEN
+	CASE nErrID OF
+		PLCPRJ_ERROR_RECEIVE_TIMEOUT:
+			sSource := '::PLC sample project receive timeout error: 0x';
+		PLCPRJ_ERROR_SENDFIFO_OVERFLOW:
+			sSource := '::PLC sample project send fifo overflow error: 0x';
+		PLCPRJ_ERROR_RECFIFO_OVERFLOW:
+			sSource := '::PLC sample project receive fifo overflow error: 0x';
+		PLCPRJ_ERROR_INVALID_FRAME_FORMAT:
+			sSource := '::PLC sample project invalid frame format error: 0x';
+	ELSE
+		sSource := '::Other PLC sample project error: 0x';
+	END_CASE
+ELSIF (nErrID AND 16#00008000) = 16#00008000 THEN
+	sSource := '::Internal TCP/IP Connection Server error: 0x';
+ELSE
+	sSource := '::TwinCAT System error: 0x';
+END_IF
+
+sPut := CONCAT( CONCAT( CONCAT( sPrefix, sMessage ), sSource ), DWORD_TO_HEXSTR( nErrID AND 16#FFFF, 0, FALSE ) ); 
+
+fbBuffer.A_AddTail( pBuffer:= ADR(buffer), cbBuffer:= SIZEOF(buffer),
+					putValue:= sPut, bOk=>bOk, nCount=>nCount );
+IF bOk THEN
+	IF bLog THEN(* Log error message *)
+		ADSLOGSTR( ADSLOG_MSGTYPE_ERROR OR ADSLOG_MSGTYPE_LOG, '%s', sPut );	
+	END_IF
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

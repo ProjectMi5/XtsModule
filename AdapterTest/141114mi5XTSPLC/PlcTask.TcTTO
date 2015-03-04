@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <Task Name="PlcTask" Id="{fa04aa83-89d5-4f54-8ec6-248e6d1faab0}">
+    <!--CycleTime in micro seconds.-->
+    <CycleTime>250</CycleTime>
+    <Priority>1</Priority>
+    <PouCall>
+      <Name>OPC_Client</Name>
+    </PouCall>
+    <PouCall>
+      <Name>Powerall</Name>
+    </PouCall>
+    <PouCall>
+      <Name>MAIN</Name>
+    </PouCall>
+    <TaskFBGuid>{841da530-cf94-412b-b79c-f756d9e5e380}</TaskFBGuid>
+    <Fb_init>{17d29b70-5e5f-476c-b13a-fd25fa24b406}</Fb_init>
+    <Fb_exit>{be1f3c98-b180-4725-82c4-0de07b5cf2bc}</Fb_exit>
+    <CycleUpdate>{30bcb823-69b6-475a-b9cc-8a84a9fb23ab}</CycleUpdate>
+    <PostCycleUpdate>{64c852ae-ad93-4f30-ab9e-10c01c4c8371}</PostCycleUpdate>
+  </Task>
+</TcPlcObject>

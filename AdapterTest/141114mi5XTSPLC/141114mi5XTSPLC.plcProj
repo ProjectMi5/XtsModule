@@ -1,0 +1,424 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{289ee47a-1d0d-42ce-8557-69d9ce539843}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>MyApplication</RootNamespace>
+    <AssemblyName>MyApplication</AssemblyName>
+    <Name>_141114mi5XTSPLC</Name>
+    <ExternalTypes>
+      <Type Guid="{18071995-0000-0000-0000-000000000019}">HRESULT</Type>
+      <Type Guid="{18071995-0000-0000-0000-000000000025}">IID</Type>
+      <Type Guid="{00000030-0000-0000-e000-000000000064}">ITComObjectServer</Type>
+      <Type Guid="{02000002-0000-0000-e000-000000000064}">ITcTask</Type>
+      <Type Guid="{00000001-0000-0000-e000-000000000064}">ITcUnknown</Type>
+      <Type Guid="{18071995-0000-0000-0000-00000000000f}">OTCID</Type>
+      <Type Guid="{d91e046a-a488-4d27-8d43-0f3c40ed5081}">PlcAppSystemInfo</Type>
+      <Type Guid="{6a76d020-03a2-465c-a678-c341951e9ef3}">PlcTaskSystemInfo</Type>
+    </ExternalTypes>
+    <SccProjectName>
+    </SccProjectName>
+    <SccProvider>
+    </SccProvider>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccLocalPath>
+    </SccLocalPath>
+    <FileVersion>1.0.0.0</FileVersion>
+    <LibraryReferences>{a83156a4-28af-48af-9204-9c74bb935b98}</LibraryReferences>
+    <Application>{c8b7c44d-3498-407c-b06e-b5572c3fb702}</Application>
+    <TypeSystem>{5fd61cee-ec38-469e-8d8e-27d5a88441c3}</TypeSystem>
+    <Implicit_Task_Info>{87aee80d-2361-49da-96e2-62be68f7719c}</Implicit_Task_Info>
+    <Implicit_KindOfTask>{8ebf955f-40a7-4d08-b3be-6ac8479e8294}</Implicit_KindOfTask>
+    <Implicit_Jitter_Distribution>{898abd3d-7434-418f-b968-b2270274c162}</Implicit_Jitter_Distribution>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="DUTs\industrialPhysics\MNG_APPLICATION_INPUTS_32BIT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\industrialPhysics\MNG_APPLICATION_OUTPUTS_32BIT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\industrialPhysics\MNG_DataArray.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\industrialPhysics\MNG_DatagramHeader.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\industrialPhysics\MNG_DatagramType.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\industrialPhysics\MNG_POSE6.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\industrialPhysics\MNG_RawDatagram.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\industrialPhysics\VEC3.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\In_outputmnoduklesimu\DUT_SimulationFeed.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\OPC Data Structure\DUT_MODULE_INTERFACE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\OPC Data Structure\DUT_MODULE_INTERFACE_INPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\OPC Data Structure\DUT_MODULE_INTERFACE_OUTPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\OPC Data Structure\DUT_PARAMETER.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\OPC Data Structure\DUT_SKILL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\OPC Data Structure\DUT_SKILL_INPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\OPC Data Structure\DUT_SKILL_OUTPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\OPC Data Structure\DUT_TASK.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\OPC Data Structure\DUT_TASKSTATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_MODE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_PARAMETER_INPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_PARAMETER_OUTPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_SERVER_MODULE_INTERFACE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_SERVER_MODULE_INTERFACE_INPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_SERVER_MODULE_INTERFACE_OUTPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_SERVER_PARAMETERINPUTARRAY.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_SERVER_PARAMETEROUTPUTARRAY.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_SERVER_SKILLINPUTARRAY.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_SERVER_SKILLOUTPUTARRAY.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_SERVER_SKILL_INPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_SERVER_SKILL_OUTPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_SERVER_STATEVALUEARRAY.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Server DUTs\Server DUTs\Server DUTs\DUT_STATEVALUES.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\XTS DUTs\DUT_MoverInfo.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\XTS DUTs\DUT_XTS_Interface.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GVLs\CAInterface.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GVLs\GVL.TcGVL">
+      <SubType>Code</SubType>
+      <ObjectGuid>{fba23080-ab95-41af-b8d4-86d8a431a892}</ObjectGuid>
+    </Compile>
+    <Compile Include="GVLs\industrialPhysics\MNG_GLOBALS.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GVLs\MI5.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GVLs\OPCConstants.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GVLs\SKillGVL\ModuleInterface.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GVLs\SKillGVL\Mover_Infos.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GVLs\SKillGVL\SkillHandleConstants.TcGVL">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PlcTask.TcTTO">
+      <SubType>Code</SubType>
+      <ObjectGuid>{fa04aa83-89d5-4f54-8ec6-248e6d1faab0}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CAHandle\FB_AddAllAxes.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\FB_Buddyenable.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\FB_BuddygearBack.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\FB_CAHandle.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\FB_CAInterfaceHandle.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\FB_HaltAll.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\FB_PowerAll.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\FB_RemoveAllAxesCA.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\FB_ResetAll.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\FB_UncoupleAll.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\Kurvenscheibe\Powerall.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\MC2Handle\FB_CoupleInit.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\MC2Handle\FB_SectionChange.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\MC2Handle\F_CurveSpeed.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CAHandle\MC2Handle\F_MoverInCurve.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\FB_TranslateInterface.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\industrialPhysics\FB_LogFifo.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\industrialPhysics\FB_IOLink.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\industrialPhysics\MAIN_simu.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\industrialPhysics\MNG_SIMULATION.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\industrialPhysics\MNG_UPDATEIOS.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\MAIN.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{c7cc4dd1-a633-4051-a294-77dfcf6cdba3}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\OPC Client\FB_OPCServerConnect.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\OPC Client\FB_OpcUaHandle.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\OPC Client\FB_ReadVariableOnce.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\OPC Client\FB_Update.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\OPC Client\FB_WriteVariableOnce.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\OPC_Client.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_2001_doublecookie.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_AutoBlock.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_CalculateWaysection.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_CheckWaysection.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_FreeSlotHandle.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_FreeTransport.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_ResetXTS.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_SHortTEST1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_ShortTEST2.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_ShortTEST3.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_SkillHandle.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_SkillHandleAll.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_TEST1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_2001_cocktail.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_TEST2.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_2002cookie.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_TEST3.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_2003_cookie.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\Fb_Test_init_Cocktail.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\Fb_Test_init_Cookie.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\Fb_Test_init_x.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\Fb_Test_init_y.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\Fb_Test_init_z.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\Fb_Test_init_Creme1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_Transport.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\FB_ZTransport.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\F_CheckIfInCurve.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\F_CheckIfInSection.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\F_CheckSurpressedSection.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\F_SetAxInSection.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\F_SetInSection.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\VisuLampen\FB_CheckSimuVisu.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\SkillHandle\VisuLampen\FB_SimuLampHandle.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SimuTask.TcTTO">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DUTs" />
+    <Folder Include="DUTs\industrialPhysics\" />
+    <Folder Include="DUTs\LampDUTS" />
+    <Folder Include="DUTs\In_outputmnoduklesimu" />
+    <Folder Include="DUTs\Server DUTs" />
+    <Folder Include="DUTs\OPC Data Structure\" />
+    <Folder Include="DUTs\Server DUTs\Server DUTs\" />
+    <Folder Include="DUTs\Server DUTs\Server DUTs\Server DUTs\" />
+    <Folder Include="DUTs\XTS DUTs\" />
+    <Folder Include="GVLs" />
+    <Folder Include="GVLs\industrialPhysics\" />
+    <Folder Include="GVLs\SKillGVL\" />
+    <Folder Include="POUs\CAHandle\" />
+    <Folder Include="POUs\CAHandle\Kurvenscheibe\" />
+    <Folder Include="POUs\CAHandle\MC2Handle\" />
+    <Folder Include="POUs\industrialPhysics\" />
+    <Folder Include="POUs\OPC Client\" />
+    <Folder Include="POUs\SkillHandle\" />
+    <Folder Include="POUs" />
+    <Folder Include="POUs\SkillHandle\VisuLampen" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="141114mi5XTSPLC.tmc">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <LibraryReference Include="Tc2_MC2,newest,Beckhoff Automation GmbH">
+      <Namespace>Tc2_MC2</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc2_Standard,3.3.0.0,Beckhoff Automation GmbH">
+      <Namespace>Tc2_Standard</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc2_System,newest,Beckhoff Automation GmbH">
+      <Namespace>Tc2_System</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc2_TcpIp,3.3.2.0,Beckhoff Automation GmbH">
+      <Namespace>Tc2_TcpIp</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc2_Utilities,3.3.7.0,Beckhoff Automation GmbH">
+      <Namespace>Tc2_Utilities</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc3_Interfaces,newest,Beckhoff Automation GmbH">
+      <Namespace>Tc3_Interfaces</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc3_MC_CA,0.1.1.9,Beckhoff Automation GmbH">
+      <Namespace>Tc3_MC_CA</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc3_Module,newest,Beckhoff Automation GmbH">
+      <Namespace>Tc3_Module</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc3_PLCopen_OpcUa,newest,Beckhoff Automation GmbH">
+      <Namespace>Tc3_PLCopen_OpcUa</Namespace>
+    </LibraryReference>
+  </ItemGroup>
+  <ProjectExtensions />
+</Project>

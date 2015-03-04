@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <DUT Name="DUT_MODE" Id="{23f0724f-8c2e-4f26-a845-d5acbc90a4d1}">
+    <Declaration><![CDATA[/// MODE to run (inside of MODULE_INTERFACE_INPUT)
+TYPE DUT_MODE :
+(
+	///Initialitzation number mode
+	Init := 0,
+	///Automatic number mode
+	Auto := 1,
+	///Manual number mode
+	Manual := 2,
+	Reset := 3
+);
+END_TYPE
+]]></Declaration>
+    <ObjectProperties />
+  </DUT>
+</TcPlcObject>

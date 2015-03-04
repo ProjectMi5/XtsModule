@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_BuddygearBack" Id="{393a17b1-6996-4749-b066-9b9ef53ebd30}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BuddygearBack
+VAR_INPUT
+	execute: BOOL;
+	activate: BOOL;
+	release: BOOL;
+	axno: INT;
+	gap: LREAL;
+	masterpos: LREAL;
+	slavepos: LREAL;
+END_VAR
+VAR_OUTPUT
+	buddyactive: BOOL;
+	buddysafe: BOOL;
+	done: BOOL;
+	busy: BOOL;
+END_VAR
+VAR
+	powerslave: MC_Power;
+	powermaster: MC_Power;
+	fbMoveAbsSlave: Tc2_MC2.MC_MoveAbsolute;
+	fbMoveAbsMaster: Tc2_MC2.MC_MoveAbsolute;
+	fbCouple: Tc2_MC2.MC_GearIn;
+	fbCoupleCA: Tc2_MC2.MC_GearIn;
+	fbDeCouple: Tc2_MC2.MC_GearOut;
+	state: INT;
+	targetpos: LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF Execute THEN
+		busy		:= TRUE;
+		done		:= FALSE;
+			CASE state OF
+			
+			0:	
+				
+			// Position Berechnen
+				targetpos := masterpos - couplegap;
+				powerslave(Axis := ax[2*axno], Enable := TRUE, Enable_Positive := TRUE, Enable_Negative := TRUE);
+				powermaster(Axis := ax[2*axno-1], Enable := TRUE, Enable_Positive := TRUE, Enable_Negative := TRUE);
+ 				//GVL.poweredaxes[2*axno-1] := TRUE;
+				//GVL.poweredaxes[2*axno] := TRUE;
+				IF powerslave.Status AND powermaster.Status THEN
+					state := 3;
+				END_IF
+			3:	
+				fbMoveAbsMaster(	Axis:= ax[2*axno], 
+							Execute:= FALSE, 
+							Position:= masterpos, 
+							Velocity:= buddyvelo);
+				fbMoveAbsSlave(	Axis:= ax[2*axno-1], 
+							Execute:= FALSE, 
+							Position:= slavepos, 
+							Velocity:= buddyvelo);
+				state := 10;
+				
+			10:
+				fbMoveAbsMaster(	Axis:= ax[2*axno], 
+							Execute:= TRUE);
+				
+					
+				fbMoveAbsSlave(	Axis:= ax[2*axno-1], 
+							Execute:= TRUE);
+				IF fbMoveAbsMaster.Done AND fbMoveAbsSlave.Done THEN
+					state := 20;
+				END_IF
+				
+			20:
+				fbCouple(
+						Master:= ax[2*axno], 
+						Slave:= ax[2*axno -1], 
+						Execute:= FALSE 
+						);
+				fbCoupleCA(
+						Master := grp[axno],
+						Slave := ax[2*axno],
+						execute := FALSE);
+				
+				state := 30;
+			30: fbCouple(
+						Master:= ax[2*axno], 
+						Slave:= ax[2*axno -1], 
+						Execute:= TRUE 
+						);
+						
+				fbCoupleCA(
+						Master := grp[axno],
+						Slave := ax[2*axno],
+						execute := TRUE);
+						
+						
+				IF fbCouple.InGear AND fbCoupleCA.InGear THEN
+					state := 40;
+				END_IF
+			40: 
+				buddysafe 	:= TRUE;
+				execute		:= FALSE;
+				busy		:= FALSE;
+				execute		:= TRUE;
+				done		:= TRUE;
+				state 		:= 0;
+			END_CASE		
+ELSE
+	state := 0;
+	done := FALSE;
+END_IF]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_CoupleInit" Id="{4250b104-a8a4-48df-984d-aa28543d8afc}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CoupleInit
+VAR_INPUT
+	execute: BOOL;
+	startline: LREAL;
+END_VAR
+VAR_OUTPUT
+	busy: BOOL;
+	error: BOOL;
+	done: BOOL;
+END_VAR
+VAR
+	fbmoveAbsMC: ARRAY[1..axcnt] OF MC_MoveAbsolute;
+	fbcouple: ARRAY[1..grpcnt] OF Tc2_MC2.MC_GearIn;
+	fbcoupleCA: ARRAY[1..grpcnt] OF Tc2_MC2.MC_GearIn;
+	fbSetpos: ARRAY[1..grpcnt] OF Tc2_MC2.MC_SetPosition;
+	state: INT := 0;
+	i: INT;
+	movedone: BOOL;
+	mccoupledone: BOOL;
+	CAcoupledone: BOOL;
+	setposdone: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[busy := FALSE;
+IF execute THEN
+	busy := TRUE;
+	done := FALSE;
+	CASE state OF
+		
+	0:	
+		startposition[6] := startline;
+		startposition[5] := startline - couplegap;
+		startposition[4] := startline - 2* couplegap -50;
+		startposition[3] := startline - 3* couplegap -50;
+		startposition[2] := startline - 4* couplegap -100;
+		startposition[1] := startline - 5* couplegap -100;
+		
+		state := 1;
+	1: 
+		FOR i := 1 TO axcnt DO
+		fbmoveAbsMC[i](Axis := ax[i],Position := Startposition[i], Velocity := 400, Execute := FALSE);
+		END_FOR
+		state := 2;
+		
+	2:	
+		movedone := TRUE;
+		FOR i := 1 TO axcnt DO
+			fbmoveAbsMC[i](Axis := ax[i],Position := Startposition[i], Velocity := 400, Execute := TRUE);
+			IF NOT fbmoveAbsMC[i].Done THEN movedone := FALSE; END_IF
+		END_FOR
+		IF movedone THEN
+			state := 9;
+		END_IF
+		
+	9:	//MC2 couplen
+		FOR i := 1 TO grpcnt DO
+		fbcouple[i](Master := ax[2*i], Slave := ax[2*i-1],execute := FALSE); 
+		END_FOR
+		state := 10;
+		
+	10: //MC2 couplen
+		mccoupledone := TRUE;
+			FOR i := 1 TO grpcnt DO
+			fbcouple[i](Master := ax[2*i], Slave := ax[2*i-1], execute := TRUE); 
+			IF fbcouple[i].Busy THEN
+				mccoupledone := FALSE;
+			END_IF	
+		END_FOR
+		IF mccoupledone THEN state := 15; END_IF
+
+
+	15: //	setpos virtuelle ca mover
+		setposdone := FALSE;
+		FOR i := 1 TO grpcnt DO
+		fbSetpos[i](Axis := grp[i], Position := ax[2*i].NcToPlc.SetPos,execute := FALSE);
+		END_FOR
+		state := 16;
+		
+	16: 
+		setposdone := TRUE;
+		FOR i := 1 TO grpcnt DO
+			fbSetpos[i](Axis := grp[i], Position := ax[2*i].NcToPlc.SetPos,execute := TRUE);
+			IF fbSetpos[i].Busy THEN
+				setposdone := FALSE;
+			END_IF
+		END_FOR
+		IF setposdone THEN
+			state := 20;
+		END_IF
+		
+	20:	// CA couplen
+		FOR i := 1 TO grpcnt DO
+		fbcoupleCA[i](Master := Grp[i], Slave := ax[2*i],execute := FALSE); 
+		END_FOR
+		state := 21;
+		
+	21:
+		CAcoupledone := TRUE;
+			FOR i := 1 TO grpcnt DO
+			fbcoupleCA[i](Master := Grp[i], Slave := ax[2*i],execute := TRUE); 
+			IF fbcoupleCA[i].Busy THEN
+				CAcoupledone := FALSE;
+			END_IF	
+		END_FOR
+		IF CAcoupledone THEN state := 100; END_IF
+		
+		
+	100: // done
+		done 	:= TRUE;
+		busy 	:= FALSE;
+		execute := FALSE;
+		state 	:= 0;
+		error := FALSE;
+		
+
+	END_CASE
+
+END_IF]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

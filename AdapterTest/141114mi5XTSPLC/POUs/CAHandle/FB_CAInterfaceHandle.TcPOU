@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_CAInterfaceHandle" Id="{f8a99756-01cf-46cc-9ff8-4334f233f3aa}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_CAInterfaceHandle
+VAR_INPUT
+	moveracc: LREAL;
+	movervel: LREAL;
+	axisno: INT;
+END_VAR
+VAR
+	///FBs
+	fbhaltsingle: MC_HaltCA(calltargetOID);
+	fbmove: MC_MoveAbsoluteCA(calltargetOID);
+	buffermode: MC_BufferMode;
+	fbBuddyenable: FB_Buddyenable;
+	fbBuddyGearBack: FB_BuddygearBack;
+	reltargetpos: LREAL;
+	targetpos: LREAL;
+	acttargetpos: LREAL;
+	actclockwise: BOOL;
+	buddytemp: BOOL;
+	fbSectionChange	: FB_SectionChange;
+	///lokal
+	state		: INT := 0;
+	flip		: BOOL;
+	secondcurve	: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+CASE state OF 
+            	
+					0: 	//überprüfen ob änderung
+						IF (NOT (acttargetpos = CAinterface.MoverInterface[axisno].Targetpos) )THEN 
+							state := 5;
+							CAinterface.MoverInterface[axisno].movementdone := FALSE;
+						ELSE
+							IF NOT(CAinterface.MoverInterface[axisno].Buddyenable=CAinterface.MoverInterface[axisno].Buddyactive)THEN
+								state := 13;
+							END_IF
+						END_IF
+					5:	//berechnung
+						IF CAinterface.MoverInterface[axisno].Clockwise THEN
+							//CLOCKWISE
+								IF  (CAinterface.MoverInterface[axisno].Targetpos <ax[2*axisno].NcToPlc.ModuloSetPos) THEN
+									reltargetpos := CAinterface.MoverInterface[axisno].Targetpos +  railLength;
+								ELSE
+									reltargetpos := CAinterface.MoverInterface[axisno].Targetpos;
+								END_IF								
+							
+						ELSE
+							//Counter_Clockwise
+							IF  (CAinterface.MoverInterface[axisno].Targetpos >ax[2*axisno].NcToPlc.ModuloSetPos) THEN
+									reltargetpos := CAinterface.MoverInterface[axisno].Targetpos -  railLength;
+							ELSE
+									reltargetpos := CAinterface.MoverInterface[axisno].Targetpos;
+							END_IF
+													
+						END_IF
+						
+						targetpos := reltargetpos +ax[2*axisno].NcToPlc.ModuloSetTurns*raillength;
+	
+						
+            			
+						
+						 state := 9;
+						 acttargetpos := CAinterface.MoverInterface[axisno].Targetpos;
+						 actclockwise := CAinterface.MoverInterface[axisno].Clockwise;
+						
+					9:	fbmove(axis:=grp[axisno], execute:=FALSE);
+           		   		fbmove(axis:=grp[axisno], execute:=TRUE, position:=targetpos, velocity:= movervel(*für gläsertest, sonst: movervel*), gap:=CAGap, Acceleration := , ContinuousUpdate := TRUE);///moveracc);
+						state := 10;
+				
+					10:
+						fbmove(axis:=grp[axisno]);
+						
+						//Kurvenscheibe:
+						(*
+						IF F_MoverInCurve( ax[2*axisno].NcToPlc.ModuloActPos) THEN
+							//Auf Änderung der Phase Triggern:
+							IF  ax[2*axisno].NcToPlc.ModuloActPos > 1000 AND  ax[2*axisno].NcToPlc.ModuloActPos < 2500 THEN
+								secondcurve := 0;
+							ELSE
+								secondcurve := 1;
+							END_IF
+							
+							fbSectionChange(Position :=secondcurve * raillength+ ax[2*axisno].NcToPlc.ModuloActPos, Clockwise := actclockwise);
+							
+							// Geschwindigkeit neu setzen;
+							fbMove.Velocity := GVL.CurveVelo[fbSectionChange.Phase];
+							
+							//Execute aus fbSectionchange weitergeben/triggern
+							fbmove.Execute := fbSectionChange.Trigger;
+						ELSE
+							//steigende Flanke auf alte geschwindigkeit	
+							IF NOT (fbmove.Velocity = movervel) THEN
+								fbmove(axis:=grp[axisno], Velocity := movervel, execute := FALSE);
+								fbmove(axis:=grp[axisno], Velocity := movervel, execute := TRUE);
+							END_IF
+						END_IF
+						
+						*)
+						
+						//CAInterface.MoverInterface[axisno].MovementDone := FALSE;
+						//unterwegs neue position:
+						IF (NOT (acttargetpos = CAinterface.MoverInterface[axisno].Targetpos)) OR (NOT (actclockwise = CAinterface.MoverInterface[axisno].Clockwise)) THEN
+							state := 0;
+							//state := 20;
+							
+						END_IF
+						
+						IF (fbmove.Done AND ((ax[2*axisno].NcToPlc.ModuloSetPos - MoverInterface[axisno].Targetpos)<0.01)) THEN
+							IF CAinterface.MoverInterface[axisno].Buddyenable THEN
+								
+								state := 13;
+								fbBuddyenable(execute := FALSE);
+								fbBuddyGearBack(execute := FALSE);
+								ADSLOGSTR(ADSLOG_MSGTYPE_HINT, 'start uncouple and relative movement', '');
+								
+							ELSE
+							
+							state := 0;
+							CAInterface.MoverInterface[axisno].MovementDone := TRUE;
+							END_IF
+						END_IF
+						
+						
+						
+						
+						
+						
+					
+					13: IF  NOT CAinterface.MoverInterface[axisno].Buddyenable AND fbBuddyenable.done OR mi5.ResetXTS(*!!!!unschoen!!!!*)//OR ( NOT (acttargetpos = CAinterface.MoverInterface[axisno].Targetpos) AND fbBuddyenable.done)
+						THEN
+						state := 15;
+						
+						ELSE
+							fbBuddyenable(
+								execute:= TRUE, 
+								axno:= axisno, 
+								gap:= CAinterface.MoverInterface[axisno].Buddygap, 
+								done=> , 
+								);
+						IF fbBuddyenable.done  THEN
+							state := 14;
+							CAinterface.MoverInterface[axisno].Buddyactive := TRUE;
+							CAInterface.MoverInterface[axisno].MovementDone := TRUE; ///
+						END_IF
+						END_IF
+						
+					14: 
+						IF NOT CAinterface.MoverInterface[axisno].Buddyenable OR mi5.ResetXTS THEN
+						state := 15;	
+						END_IF
+						
+					
+					15: IF  NOT CAinterface.MoverInterface[axisno].Buddyenable THEN
+							fbBuddyGearBack(execute := TRUE, axno:= axisno, masterpos := fbBuddyenable.masterpos, slavepos := fbBuddyenable.slavepos);							
+
+						END_IF
+						IF fbBuddyGearBack.done THEN
+							CAinterface.MoverInterface[axisno].Buddyactive := FALSE;
+							state := 0;
+							
+						END_IF
+						
+					
+						
+					20:
+						fbhaltsingle(Axis :=grp[axisno],execute:=FALSE);
+						fbhaltsingle(execute:=TRUE,Axis :=grp[axisno]);
+						state := 21;
+					21:	
+						fbhaltsingle(Axis :=grp[axisno]);
+						IF (fbhaltsingle.Done) THEN
+							state := 0;
+						END_IF
+				END_CASE]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

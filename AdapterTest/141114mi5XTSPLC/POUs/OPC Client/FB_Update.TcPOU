@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_Update" Id="{fb4d05ca-c21b-45c1-86e8-b3110265c144}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Update
+VAR_INPUT
+	ServerUrl: STRING;
+	NamespaceUri: STRING;
+	ClientName: STRING;
+	IdentifierInput: STRING;
+	IdentifierOutput: STRING;
+	Execute: BOOL;
+	ModuleOutput: DUT_MODULE_INTERFACE_OUTPUT;
+END_VAR
+VAR_OUTPUT
+	ModuleInput: DUT_MODULE_INTERFACE_INPUT;
+	established	: BOOL;
+	error		: BOOL;
+END_VAR
+VAR
+	readestablished : BOOL;
+	writeestablished : BOOL;
+	fbConnect: FB_OPCServerConnect;
+	fbRead: FB_ReadVariableOnce;
+	fbWrite: FB_WriteVariableOnce;
+	NamespaceIndex: UINT;
+	ConnectionHdl: DWORD;
+	state: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF Execute THEN	
+error := FALSE;
+established := FALSE;
+CASE state OF
+	
+	0: state := 1;
+	1: fbConnect(
+			ServerUrl:= ServerUrl, 
+			NamespaceUri:= NamespaceUri , 
+			ClientName:= ClientName , 
+			execute:= TRUE, 
+			ConnectHdl=> ConnectionHdl , 
+			Namespaceindex=> NamespaceIndex , 
+			busy=> , 
+			done=> , 
+			error=> );
+		IF fbConnect.done THEN
+		state := 2;
+		END_IF
+		
+		
+		
+	
+	2: fbRead(
+			IdentifierInput:= IdentifierInput, 
+			NamespaceIndex:= NamespaceIndex, 
+			ConnectionHdl:= ConnectionHdl, 
+			execute:= TRUE, 
+			ModuleInput=> ModuleInput, 
+			done=> , 
+			busy=> , 
+			error=> );
+		IF fbRead.done THEN
+			readestablished := TRUE;
+		END_IF
+		state := 3;
+
+			
+	3:fbWrite(
+		IdentifierOutput:= IdentifierOutput, 
+		NamespaceIndex:= NamespaceIndex, 
+		ConnectionHdl:= ConnectionHdl, 
+		execute:= TRUE, 
+		ModuleOutput:= ModuleOutput, 
+		done=> , 
+		busy=> , 
+		error=> );
+		IF fbWrite.done THEN
+			writeestablished := TRUE;
+		END_IF
+		
+		state := 2;
+		
+		
+	
+		
+		
+END_CASE
+END_IF
+IF (readestablished AND writeestablished) THEN
+	established := TRUE;
+END_IF
+IF fbWrite.error OR fbRead.error THEN 
+	error := TRUE;
+END_IF]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

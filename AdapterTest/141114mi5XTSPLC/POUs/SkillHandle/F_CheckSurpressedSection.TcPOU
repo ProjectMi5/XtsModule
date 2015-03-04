@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="F_CheckSurpressedSection" Id="{9004440f-f9f8-4624-945f-f2c44af0c0ff}">
+    <Declaration><![CDATA[FUNCTION F_CheckSurpressedSection : BOOL
+VAR_INPUT
+	SurpressedPosition: LREAL;
+	postposition: LREAL;
+	preposition: LREAL;
+END_VAR
+VAR
+	InSection: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+	InSection := FALSE;
+		IF postposition>preposition 
+		THEN
+				//DER RESERVIERTE BEREICH GEHT NICHT ÜBER NULL:	
+					
+					// gesamter bereich umschlungen?
+					IF SurpressedPosition >  preposition AND SurpressedPosition <= PostPosition THEN
+						InSection:= TRUE;
+					END_IF
+				
+		ELSE
+				//DER RESERVIERTE BEREICH GEHT ÜBER NULL!
+				//Bereich 1: 0 bis Postpos:
+					// Grenze in Bereich?
+					IF((SurpressedPosition>=0.0) AND (SurpressedPosition<=postposition)) 
+						THEN 
+							InSection:= TRUE;
+								
+					END_IF
+				
+				//Bereich 2: Prepos bis 4000
+					// Grenze in Bereich?
+					IF((SurpressedPosition>=preposition) AND (SurpressedPosition<=raillength)) 
+						THEN 
+							InSection:= TRUE;
+					END_IF	
+		END_IF
+
+F_CheckSurpressedSection := inSection;]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

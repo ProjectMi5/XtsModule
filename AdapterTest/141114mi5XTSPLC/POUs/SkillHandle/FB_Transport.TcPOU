@@ -1,0 +1,320 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_Transport" Id="{eb3d04b7-2738-4f74-8e08-0816cb55a186}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Transport
+VAR_INPUT
+	execute: BOOL;
+	RequestPosition: LREAL;
+	AxisNo: INT;
+	reset: BOOL;
+	requestvelo: LREAL;
+	requestacc: LREAL;
+	surpressall: BOOL;
+	test1: BOOL;
+	test2: BOOL;
+END_VAR
+VAR_OUTPUT
+	ready: BOOL;
+	error: BOOL;
+	busy: BOOL;
+	done: BOOL;
+END_VAR
+VAR
+	///FBs
+	calculateWaysection: FB_CalculateWaysection;
+	checkWaysection: FB_CheckWaysection;
+	Clockwise: BOOL;
+	TempPreposition: LREAL;
+	TempPostposition: LREAL;
+	BlockingAxisNo: INT;
+	state: INT := 10;
+	surpressCheck	: BOOL := FALSE;
+	i: INT;
+	CatchUp	: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF reset THEN
+	state := 10;
+	reset := FALSE;
+	done := FALSE;
+	execute := FALSE;
+	calculateWaysection(Execute := FALSE);
+	checkWaysection(Execute := FALSE);
+END_IF
+IF execute THEN 
+	done := FALSE;
+	busy := TRUE;
+	CASE state OF 
+	10: // calculate clockwise
+			calculateWaysection(
+					Clockwise:= TRUE, 
+					Startpos:= MoverInterface[AxisNo].Setpos,
+					Endpos:= RequestPosition, 
+					WaySectionGap:= WaySectionGap, 
+					Execute:= TRUE, 
+					Prepos=> TempPreposition, 
+					Postpos=> TempPostposition, 
+					done=> );
+			IF calculateWaysection.done THEN state := 15; END_IF
+			
+	15: // immer nur einer gleichzeitig checken:
+		IF Reservingaxis = 0  OR Reservingaxis = AxisNo THEN
+			Reservingaxis := AxisNo;
+			state := 20;
+		END_IF
+	20: // check clockwise waysection & reserve if free
+			checkWaysection(
+							CheckPreposition:= TempPreposition, 
+							CheckPostposition:= TempPostposition, 
+							CheckMoverNo:= AxisNo , 
+							Execute:= TRUE, 
+							SectionFree=> , 
+							axisblocking=> , 
+							done=> );
+							
+			IF checkWaysection.done THEN
+				Reservingaxis := 0;
+					IF checkWaysection.SectionFree THEN
+						//Section frei -> Reservieren!
+							MoverInfo[AxisNo].postposition 	:= TempPostposition;
+							MoverInfo[AxisNo].preposition	:= TempPreposition;
+							state := 100;
+							Clockwise := TRUE;
+							
+						ELSE
+							state := 25;
+					END_IF
+				
+			END_IF
+	
+	25: // immer nur einer gleichzeitig checken:
+		IF Reservingaxis = 0 OR Reservingaxis = AxisNo THEN
+			Reservingaxis := AxisNo;
+			state := 30;
+		END_IF	
+	
+	30: //calculate counter-clockwise
+		calculateWaysection(
+					Clockwise:= FALSE, 
+					Startpos:= MoverInterface[AxisNo].Setpos,
+					Endpos:= RequestPosition, 
+					WaySectionGap:= WaySectionGap, 
+					Execute:= TRUE, 
+					Prepos=> TempPreposition, 
+					Postpos=> TempPostposition, 
+					done=> );
+			IF calculateWaysection.done THEN state := 40; END_IF
+	
+	40: //check counter-clockwise waysection
+		checkWaysection(
+							CheckPreposition:= TempPreposition, 
+							CheckPostposition:= TempPostposition, 
+							CheckMoverNo:= AxisNo , 
+							Execute:= TRUE, 
+							SectionFree=> , 
+							axisblocking=> , 
+							done=> );
+							
+			IF checkWaysection.done THEN
+				Reservingaxis := 0;
+					IF checkWaysection.SectionFree
+						THEN //Section frei -> Reservieren!
+							MoverInfo[AxisNo].postposition 	:= TempPostposition;
+							MoverInfo[AxisNo].preposition	:= TempPreposition;
+							state := 100;
+							Clockwise := FALSE;
+					ELSE	//section nicht frei
+						state := 50;
+					END_IF			
+			END_IF
+	
+	50: //Find Out blocking axNo
+		BlockingAxisNo := AxisNo -1;
+		IF AxisNo = 1 THEN
+			BlockingAxisNo := grpcnt;
+		END_IF
+		state := 60;
+	
+	60: 		test1 :=F_CheckIfInSection(Position := WaitingAbsPosition - 6 * WaySectionGap, postposition := MoverInterface[AxisNo].Setpos, preposition := F_SetInSection(TempPreposition - WaySectionGap -0.1));
+				test2 := F_CheckSurpressedSection(SurpressedPosition := F_SetInSection(TempPreposition - WaySectionGap -0.1), preposition := F_SetInSection(WaitingAbsPosition - 3 * couplegap), postposition := MoverInterface[AxisNo].Setpos);
+		IF NOT surpressCheck THEN
+			state  := 10;
+			surpresscheck := TRUE;
+		ELSE
+			
+				IF 
+					NOT MoverInfo[BlockingAxisNo].blocked 
+					AND NOT (Moverinfo[axisno].surpressed AND Moverinfo[F_SetAxInSection(axisno +1)].surpressed )    
+					AND 	(surpressall OR
+							(*  (NOT F_CheckIfInSection(Position:=MoverInterface[blockingaxisno].Targetpos, postposition := WaitingAbsPosition, preposition := F_SetInSection( Waitingabsposition - 6 * (waysectiongap + 0.1))) 
+								AND NOT F_CheckSurpressedSection(SurpressedPosition := F_SetInSection(TempPreposition - WaySectionGap -0.1), preposition := F_SetInSection(WaitingAbsPosition - 3 * couplegap), postposition := MoverInterface[AxisNo].Setpos))
+							*)
+							NOT F_CheckIfInSection(Position := WaitingAbsPosition - 6 * WaySectionGap, postposition := MoverInterface[AxisNo].Setpos, preposition := F_SetInSection(TempPreposition - WaySectionGap -0.2))
+							)
+						
+							// ACHSE Verdrängen
+				THEN	MoverInfo[BlockingAxisNo].surpressed := TRUE;
+						surpresscheck := FALSE;	
+							//verdängungsposition berechnen
+							IF NOT (F_CheckIfInCurve (TempPreposition - WaySectionGap -0.2) AND MoverInfo[i].nocurvestop) THEN
+							MoverInfo[BlockingAxisNo].SurpressedPosition :=  F_SetInSection(TempPreposition - WaySectionGap -0.2);
+							ELSE
+								IF F_SetInSection(TempPreposition - WaySectionGap -0.2 ) > 2500 THEN
+									// hintere kurve
+									MoverInfo[BlockingAxisNo].SurpressedPosition :=  3450;
+								ELSE
+									//vordere Kurve
+									MoverInfo[BlockingAxisNo].SurpressedPosition :=  1450;
+								END_IF
+							
+							END_IF
+							
+							
+							//gegen den uhrzeigersinn ausweichen:
+							MoverInfo[BlockingAxisNo].SupressedClockwise := FALSE;
+							state := 70; //auf verdrängung warten
+					ELSE
+							state := 10; //warten/neue Berechnung
+							IF (Moverinfo[axisno].surpressed AND Moverinfo[F_SetAxInSection(axisno +1)].surpressed ) THEN
+							ADSLOGSTR(ADSLOG_MSGTYPE_HINT, 'trying to surpress all movers! Help!', '');
+							state := 10;	
+							END_IF
+				END_IF
+			END_IF
+	
+	70: 	//Wait untill suppressed movement done
+			// Supressed mover Rücken auf
+			
+			IF  (MoverInfo[AxisNo].preposition - MoverInfo[BlockingAxisNo].postposition ) > (surpressinggap + 600) THEN
+				
+			
+			MoverInfo[AxisNo].preposition 	:= F_SetinSection(MoverInfo[BlockingAxisNo].postposition + surpressinggap);
+			MoverInfo[AxisNo].postposition	:= F_SetinSection(MoverInterface[AxisNo].Setpos + waysectiongap);
+			MoverInterface[AxisNo].targetpos := F_SetInSection(MoverInfo[BlockingAxisNo].postposition + waysectiongap + surpressinggap);
+			CAInterface.MoverInterface[AxisNo].Clockwise := FALSE;
+			CatchUp := TRUE;
+			ELSE
+			CatchUp := FALSE;
+			END_IF
+			surpresscheck := FALSE;
+				
+			state := 71;
+	71: 	
+			// immer nur einer gleichzeitig checken:
+			IF Reservingaxis = 0 OR Reservingaxis = AxisNo THEN
+				Reservingaxis := AxisNo;
+				state := 30;
+			END_IF	
+	72:
+			checkWaysection(
+							CheckPreposition:= TempPreposition, 
+							CheckPostposition:= TempPostposition, 
+							CheckMoverNo:= AxisNo , 
+							Execute:= TRUE, 
+							SectionFree=> , 
+							axisblocking=> , 
+							done=> );
+			
+							
+			IF checkWaysection.done THEN
+					Reservingaxis := 0;
+					IF checkWaysection.SectionFree
+						THEN //Section frei -> Reservieren!
+							MoverInfo[AxisNo].postposition 	:= TempPostposition;
+							MoverInfo[AxisNo].preposition	:= TempPreposition;
+							state := 100;
+							Clockwise := FALSE;
+					ELSE
+						state :=71;
+					END_IF			
+			END_IF
+			IF CatchUp THEN
+				//reservierten bereich während der fahr freigeben
+			IF ((CAInterface.MoverInterface[axisno].Setpos + WaySectionGap)> railLength) THEN //bereich überprüfen
+						MoverInfo[AxisNo].postposition := CAInterface.MoverInterface[axisno].Setpos + WaySectionGap -railLength;
+			ELSE
+						MoverInfo[AxisNo].postposition := CAInterface.MoverInterface[axisno].Setpos + WaySectionGap;
+			END_IF
+			state := 70;
+			END_IF
+	
+		///BEWEGUNGSAUSFÜHRUNG
+	100: 	CAInterface.MoverInterface[AxisNo].Targetpos := RequestPosition;
+			CAInterface.MoverInterface[AxisNo].Clockwise := Clockwise;
+			CAInterface.MoverInterface[AxisNo].MovementDone := FALSE;
+			IF (requestacc > 0.0 AND requestacc < maxacc) THEN
+			CAInterface.MoverInterface[AxisNo].Acceleration := requestacc;
+			ELSE 
+				CAInterface.MoverInterface[AxisNo].Acceleration := defaulacc;
+			END_IF
+			IF (requestvelo > 0.0 AND requestvelo < maxvelo) THEN
+			CAInterface.MoverInterface[AxisNo].Velocity := requestvelo;
+			ELSE 
+				CAInterface.MoverInterface[AxisNo].Velocity := defaultvelo;
+			END_IF
+			surpresscheck := FALSE;	
+			state := 101;
+			
+	101:	//reservierten bereich während der fahrt freigeben
+			IF Clockwise 
+			THEN 
+				// Preposition aktualisieren
+				
+					IF ((CAInterface.MoverInterface[axisno].Setpos - WaySectionGap)< 0.0) THEN //bereich überprüfen
+						MoverInfo[AxisNo].preposition := CAInterface.MoverInterface[axisno].Setpos - WaySectionGap +railLength;
+					ELSE
+						MoverInfo[AxisNo].preposition := CAInterface.MoverInterface[axisno].Setpos - WaySectionGap;
+					END_IF
+				
+			ELSE
+				//Postposition aktualisieren
+					IF ((CAInterface.MoverInterface[axisno].Setpos + WaySectionGap)> railLength) THEN //bereich überprüfen
+						MoverInfo[AxisNo].postposition := CAInterface.MoverInterface[axisno].Setpos + WaySectionGap -railLength;
+					ELSE
+						MoverInfo[AxisNo].postposition := CAInterface.MoverInterface[axisno].Setpos + WaySectionGap;
+					END_IF
+			END_IF
+			
+			//Auf Ende Warten
+			IF CAInterface.MoverInterface[AxisNo].MovementDone THEN
+		
+				state :=  10;
+				execute := FALSE;
+				busy := FALSE;
+				done := TRUE;
+					// letztes mal pre/post aktuallisieren
+								IF Clockwise 
+								THEN 
+									// Preposition aktualisieren
+									
+										IF ((CAInterface.MoverInterface[axisno].Setpos - WaySectionGap)< 0.0) THEN //bereich überprüfen
+											MoverInfo[AxisNo].preposition := CAInterface.MoverInterface[axisno].Setpos - WaySectionGap +railLength;
+										ELSE
+											MoverInfo[AxisNo].preposition := CAInterface.MoverInterface[axisno].Setpos - WaySectionGap;
+										END_IF
+									
+								ELSE
+									//Postposition aktualisieren
+										IF ((CAInterface.MoverInterface[axisno].Setpos + WaySectionGap)> railLength) THEN //bereich überprüfen
+											MoverInfo[AxisNo].postposition := CAInterface.MoverInterface[axisno].Setpos + WaySectionGap -railLength;
+										ELSE
+											MoverInfo[AxisNo].postposition := CAInterface.MoverInterface[axisno].Setpos + WaySectionGap;
+										END_IF
+								END_IF
+			END_IF
+	
+	
+	
+		
+	END_CASE
+	ELSE state := 10;
+END_IF
+
+
+
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

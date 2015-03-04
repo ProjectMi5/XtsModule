@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_RemoveAllAxesCA" Id="{1547c50f-14f2-42fa-8990-2fa935d03f6d}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_RemoveAllAxesCA
+VAR_INPUT
+	execute: BOOL;
+END_VAR
+VAR_OUTPUT
+	done: BOOL;
+	busy: BOOL;
+	error: BOOL;
+END_VAR
+VAR
+	fbremfromaxis: ARRAY[1..axcnt] OF MC_RemoveAxisFromGroupCA(calltargetOID);
+	i: UINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+done := TRUE;
+busy := FALSE;
+error := FALSE;
+
+FOR i:=1 TO grpcnt DO
+	fbremfromaxis[i](AxesGroup:=CAgrp, Execute := execute, IdentInGroup := i-1);
+
+	IF (NOT fbremfromaxis[i].done) THEN
+		done := FALSE;
+	END_IF
+	IF (fbremfromaxis[i].busy) THEN
+		busy := TRUE;
+	END_IF
+	IF (fbremfromaxis[i].Error) THEN
+		error := TRUE;
+	END_IF
+END_FOR]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

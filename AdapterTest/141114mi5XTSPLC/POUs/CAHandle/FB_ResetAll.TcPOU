@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_ResetAll" Id="{bab6a601-8b9f-40df-b6fb-5e9e0e0bbb96}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ResetAll
+VAR_INPUT
+	execute: BOOL;
+END_VAR
+VAR_OUTPUT
+	done: BOOL;
+	busy: BOOL;
+	error: BOOL;
+END_VAR
+VAR
+	fbreset: ARRAY[1..axcnt] OF MC_Reset;
+	fbgrpreset: ARRAY[1..grpcnt] OF MC_Reset;
+	i: UINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+done := TRUE;
+busy := FALSE;
+error := FALSE;
+
+FOR i:=1 TO axcnt DO
+	fbreset[i](Axis:=ax[i], Execute := execute);
+
+	IF (NOT fbreset[i].done) THEN
+		done := FALSE;
+	END_IF
+	IF (fbreset[i].busy) THEN
+		busy := TRUE;
+	END_IF
+	IF (fbreset[i].Error) THEN
+		error := TRUE;
+	END_IF
+END_FOR
+FOR i:=1 TO grpcnt DO
+	fbgrpreset[i](Axis:=grp[i], Execute := execute);
+
+	IF (NOT fbgrpreset[i].done) THEN
+		done := FALSE;
+	END_IF
+	IF (fbgrpreset[i].busy) THEN
+		busy := TRUE;
+	END_IF
+	IF (fbgrpreset[i].Error) THEN
+		error := TRUE;
+	END_IF
+END_FOR
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

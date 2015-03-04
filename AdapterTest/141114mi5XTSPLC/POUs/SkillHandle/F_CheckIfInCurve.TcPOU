@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="F_CheckIfInCurve" Id="{a2853a0b-9d38-476e-9122-8a03c022f2c6}">
+    <Declaration><![CDATA[FUNCTION F_CheckIfInCurve : BOOL
+VAR_INPUT
+	Position: LREAL;
+END_VAR
+VAR
+	pre1: LREAL := 1490.0;
+	end1: LREAL := 2010.0;
+	
+	pre2: LREAL := 3490.0;
+	
+	end2: LREAL := 10.0;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[F_CheckIfInCurve := F_CheckIfInSection(Position := Position, postposition := end1, preposition := pre1) or F_CheckIfInSection(Position := Position, postposition := end2, preposition := pre2);]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

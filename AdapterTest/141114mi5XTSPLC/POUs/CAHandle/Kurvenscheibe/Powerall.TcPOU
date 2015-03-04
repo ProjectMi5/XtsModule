@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="Powerall" Id="{9293db3e-56c7-463a-b7a8-0f329de9d653}">
+    <Declaration><![CDATA[PROGRAM Powerall
+VAR
+	Powerall : FB_PowerAll;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Powerall(enable := True);]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

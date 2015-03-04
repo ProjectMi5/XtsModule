@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_OpcUaHandle" Id="{c25243cd-1994-447d-885a-bff5fb4d3199}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OpcUaHandle
+VAR_INPUT
+	execute	: BOOL;
+END_VAR
+VAR_OUTPUT
+	established	: BOOL;
+	error		: BOOL;
+END_VAR
+VAR
+	fbOpcUaHandle	: ARRAY [1..grpcnt] OF FB_Update;
+	
+	initdone	: BOOL := FALSE;
+	i: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF execute THEN
+	
+
+		IF initdone THEN
+				FOR i := 1 TO grpcnt DO
+					fbOpcUaHandle[i](			
+					Execute:= TRUE, 
+					ModuleOutput:= Module[i].Output, 
+					ModuleInput=> Module[i].Input, 
+					established=> established, 
+					error=> error);
+				END_FOR
+				
+		ELSE
+			fbOpcUaHandle[1](
+					ServerUrl:= 'opc.tcp://192.168.175.230:4840', 
+					NamespaceUri:= 'PLC1', 
+					ClientName:= 'XTS1', 
+					IdentifierInput:= 'GVL.OPCModule[1].Input', 
+					IdentifierOutput:= 'GVL.OPCModule[1].Output', 
+					Execute:= FALSE 
+					);
+			fbOpcUaHandle[2](
+					ServerUrl:= 'opc.tcp://192.168.175.230:4840', 
+					NamespaceUri:= 'PLC1', 
+					ClientName:= 'XTS2', 
+					IdentifierInput:= 'GVL.OPCModule[2].Input', 
+					IdentifierOutput:= 'GVL.OPCModule[2].Output', 
+					Execute:= FALSE 
+					);
+			fbOpcUaHandle[3](
+					ServerUrl:= 'opc.tcp://192.168.175.230:4840', 
+					NamespaceUri:= 'PLC1', 
+					ClientName:= 'XTS3', 
+					IdentifierInput:= 'GVL.OPCModule[3].Input', 
+					IdentifierOutput:= 'GVL.OPCModule[3].Output', 
+					Execute:= FALSE 
+					);
+			initdone := TRUE;
+			
+		
+		
+		END_IF
+END_IF]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

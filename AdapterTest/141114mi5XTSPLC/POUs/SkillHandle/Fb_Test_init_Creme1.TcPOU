@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="Fb_Test_init_Creme1" Id="{d39c4007-d915-48b7-ac5e-c9f02eabcc82}">
+    <Declaration><![CDATA[FUNCTION_BLOCK Fb_Test_init_Creme1
+VAR_INPUT
+	execute: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF execute THEN
+	MI5.Module2001.Input.SkillInput.SkillInput0.ParameterInput.ParameterInput0.StringValue := 'opc.tcp://192.168.192.138:4840';
+	MI5.Module2001.Input.SkillInput.SkillInput0.ParameterInput.ParameterInput1.StringValue := 'MI5.Module2301.Output.PositionSensor';
+	MI5.Module2001.Input.SkillInput.SkillInput0.ParameterInput.ParameterInput2.StringValue := 'MI5.Module2301.Input.PositionInput';
+	MI5.Module2001.Input.SkillInput.SkillInput0.ParameterInput.ParameterInput3.StringValue := '4';
+	MI5.Module2001.Input.SkillInput.SkillInput0.ParameterInput.ParameterInput4.StringValue := 'PLC1';
+	MI5.Module2001.Input.SkillInput.SkillInput0.Execute := TRUE;
+	IF MI5.Module2001.Output.SkillOutput.SkillOutput0.Done OR MI5.Module2001.Output.SkillOutput.SkillOutput0.Error THEN
+		MI5.Module2001.Input.SkillInput.SkillInput0.Execute := FALSE;
+		execute := FALSE;
+	END_IF
+END_IF]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

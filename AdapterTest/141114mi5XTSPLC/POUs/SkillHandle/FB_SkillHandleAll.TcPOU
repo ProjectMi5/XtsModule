@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_SkillHandleAll" Id="{fa894b10-45d7-4557-81ed-610508540fda}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SkillHandleAll
+VAR_INPUT
+	execute: BOOL;
+	startinit: BOOL;
+END_VAR
+VAR_OUTPUT
+	initdone: BOOL;
+END_VAR
+VAR
+	///FBs
+	fbCalculateWaysection: FB_CalculateWaysection;
+	fbCheckWaysection: FB_CheckWaysection;
+	SkillHandle: ARRAY[1..grpcnt] OF FB_SkillHandle;
+	freeSlotHandle: FB_FreeSlotHandle;
+	i: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF execute THEN
+	
+ 			FOR i:=1 TO grpcnt DO
+			
+			IF NOT MoverInfo[i].blocked THEN
+				MoverInterface[i].Buddyenable := FALSE;
+			END_IF
+			 SkillHandle[i](Input:= ModuleInterface.Module[i].Input , Output=> ModuleInterface.Module[i].Output);
+			 SkillAx[i] := SkillHandle[i].mymover;
+			END_FOR 
+			freeSlotHandle();
+END_IF
+
+IF startinit THEN
+			//init auf XTS Setzen
+			initdone := FALSE;
+			MoverInterface[1].Targetpos := MoverInterface[1].Setpos;
+			MoverInfo[1].preposition 	:= F_SetInSection(MoverInterface[1].Targetpos - WaySectionGap);
+			MoverInfo[1].postposition 	:= F_SetInSection(MoverInterface[1].Targetpos + WaySectionGap);
+			MoverInterface[1].Clockwise := TRUE;
+			
+			MoverInterface[2].Targetpos	:= MoverInterface[2].Setpos;
+			MoverInfo[2].preposition 	:= F_SetInSection(MoverInterface[2].Targetpos-WaySectionGap);
+			MoverInfo[2].postposition 	:= F_SetInSection(MoverInterface[2].Targetpos+WaySectionGap);
+			MoverInterface[2].Clockwise := TRUE;
+			
+			MoverInterface[3].Targetpos	:= MoverInterface[3].Setpos;
+			MoverInfo[3].preposition 	:= F_SetInSection(MoverInterface[3].Setpos - WaySectionGap);
+			MoverInfo[3].postposition 	:= F_SetInSection(MoverInterface[3].Setpos + WaySectionGap);
+			MoverInterface[3].Clockwise := TRUE;
+			
+			
+			
+			initdone := TRUE;
+			
+			FOR i := 1 TO grpcnt DO
+				
+				IF NOT MoverInterface[i].MovementDone THEN
+					initdone := FALSE;
+					
+				END_IF
+			END_FOR
+			startinit := NOT (initdone);
+			
+			AwaitingAxisCnt				:= grpcnt;
+END_IF
+			
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

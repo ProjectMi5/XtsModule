@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <DUT Name="MNG_APPLICATION_INPUTS_32BIT" Id="{14ffdd38-5bb5-4b88-9af2-be065f754655}">
+    <Declaration><![CDATA[
+TYPE MNG_APPLICATION_INPUTS_32BIT :
+STRUCT
+    NumSignals                     : INT     := 12        ;
+    Cocktail_Holder1_00_VACUUM : BOOL    := 0; (* r_Adapter/Cocktail_Holder_1/Cocktail_Holder1?Vacuum *)
+    DetectionCookieAdapter1_00_IR : BOOL    := 0; (* dapter/Cocktail_Holder_1/DetectionCookieAdapter1?IR *)
+    Cocktail_Holder2_00_VACUUM : BOOL    := 0; (* r_Adapter/Cocktail_Holder_2/Cocktail_Holder2?Vacuum *)
+    DetectionCookieAdapter2_00_IR : BOOL    := 0; (* dapter/Cocktail_Holder_2/DetectionCookieAdapter2?IR *)
+    Cocktail_Holder3_00_VACUUM : BOOL    := 0; (* r_Adapter/Cocktail_Holder_3/Cocktail_Holder3?Vacuum *)
+    DetectionCookieAdapter3_00_IR : BOOL    := 0; (* dapter/Cocktail_Holder_3/DetectionCookieAdapter3?IR *)
+    Cocktail_Holder4_00_VACUUM : BOOL    := 0; (* r_Adapter/Cocktail_Holder_4/Cocktail_Holder4?Vacuum *)
+    DetectionCookieAdapter4_00_IR : BOOL    := 0; (* dapter/Cocktail_Holder_4/DetectionCookieAdapter4?IR *)
+    Cocktail_Holder5_00_VACUUM : BOOL    := 0; (* r_Adapter/Cocktail_Holder_5/Cocktail_Holder5?Vacuum *)
+    DetectionCookieAdapter5_00_IR : BOOL    := 0; (* dapter/Cocktail_Holder_5/DetectionCookieAdapter5?IR *)
+    Cocktail_Holder6_00_VACUUM : BOOL    := 0; (* r_Adapter/Cocktail_Holder_6/Cocktail_Holder6?Vacuum *)
+    DetectionCookieAdapter6_00_IR : BOOL    := 0; (* dapter/Cocktail_Holder_6/DetectionCookieAdapter6?IR *)
+END_STRUCT
+END_TYPE
+
+
+]]></Declaration>
+    <ObjectProperties />
+  </DUT>
+</TcPlcObject>

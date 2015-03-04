@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <GVL Name="MNG_GLOBALS" Id="{7733930b-66ac-41c5-92b2-4f410b7048c8}">
+    <Declaration><![CDATA[ VAR_GLOBAL CONSTANT
+	/// Max. number of server<->client connections 
+	PLCPRJ_MAX_CONNECTIONS: UDINT := 5;
+	PLCPRJ_SERVER_RESPONSE_TIMEOUT: TIME := TIME#10s0ms;
+	PLCPRJ_CLIENT_SEND_CYCLE_TIME: TIME := TIME#1ms;
+	PLCPRJ_RECEIVER_POLLING_CYCLE_TIME: TIME := TIME#1ms;
+	/// Max. internal fifo/receiver buffer size 
+	PLCPRJ_BUFFER_SIZE: UDINT := 10000;
+	/// receive fifo/buffer overflow
+	PLCPRJ_ERROR_RECEIVE_BUFFER_OVERFLOW: UDINT := 16#8101;
+	/// send fifo/buffer overflow 
+	PLCPRJ_ERROR_SEND_BUFFER_OVERFLOW: UDINT := 16#8102;
+	/// receive timeout error 
+	PLCPRJ_ERROR_RESPONSE_TIMEOUT: UDINT := 16#8103;
+	/// invalid frame format/data 
+	PLCPRJ_ERROR_INVALID_FRAME_FORMAT: UDINT := 16#8104;
+	/// invalid io format/data 
+	PLCPRJ_ERROR_INVALID_IO_FORMAT_RECEIVED: UDINT := 16#8105;
+	/// internal error 
+	PLCPRJ_ERROR_INTERNAL: UDINT := 16#8105;
+	/// rx data inconsistent 
+	PLCPRJ_ERROR_RX_DATA_INCONSISTENT: UDINT := 16#8106;
+	PLCPRJ_ERROR_RECEIVE_TIMEOUT: UDINT := 16#8107;
+	/// send fifo overflow error 
+	PLCPRJ_ERROR_SENDFIFO_OVERFLOW: UDINT := 16#8108;
+	/// receive fifo overflow error 
+	PLCPRJ_ERROR_RECFIFO_OVERFLOW: UDINT := 16#8109;
+	/// Bytes: 131072; Max 128 KB of datagram payload data
+	MNG_BUFFER_SIZE: DWORD := 32768;
+	/// Max 10 datagrams buffered before loss occurs 
+	MNG_DatagramsFIFO_Size: DWORD := 10;
+	MNG_EmptyDatagramHeader: MNG_DatagramHeader;
+	MNG_Application_NumInputs: DWORD := 4;
+	MNG_Application_NumOutputs: DWORD := 4;
+	/// PI should be defined by the system 
+	/// PI      : LREAL := 3.1415926535897932384626433832795; 
+	DEG2RAD: LREAL := 0.017453292519943295;
+	RAD2DEG: LREAL := 57.295779513082323;
+	MNG_TIMESTAMP: LREAL := 0;
+END_VAR]]></Declaration>
+    <ObjectProperties />
+  </GVL>
+</TcPlcObject>

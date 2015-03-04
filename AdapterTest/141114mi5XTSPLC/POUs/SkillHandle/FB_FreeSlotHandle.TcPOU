@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_FreeSlotHandle" Id="{16d35ba5-022e-421b-910a-882993357e47}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_FreeSlotHandle
+VAR_INPUT
+	autoexecute: BOOL;
+END_VAR
+VAR
+	fbFreeTransport: ARRAY[1..grpcnt] OF FB_FreeTransport;
+	i: INT;
+	initdone: BOOL;
+	initax: INT := 3;
+	minposition: LREAL := 4000.0;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT initdone AND((MoverInterface[1].MovementDone) AND (MoverInterface[2].MovementDone) AND (MoverInterface[3].MovementDone) ) THEN
+	fbFreeTransport[initax](AxisNo := initax, RequestPosition := WaitingAbsPosition,execute := TRUE);
+	IF fbFreeTransport[3].done THEN
+	autoexecute := TRUE;
+	initdone := TRUE;
+	END_IF
+END_IF
+
+		FOR i := 1 TO grpcnt DO
+			IF NOT MoverInfo[i].reserved THEN
+				IF NOT (MoverInterface[i].Setpos = WaitingAbsPosition) THEN
+					fbFreeTransport[i](AxisNo := i, RequestPosition := WaitingAbsPosition,execute := autoexecute);
+					
+				ELSE
+					fbFreeTransport[i](AxisNo := i, RequestPosition := WaitingAbsPosition,execute := FALSE);
+					IF NOT MoverInfo[i].reserved	THEN
+					AwaitingReservationAxis := i;
+					END_IF
+					//MoverInfo[i].blocked := TRUE;
+				END_IF
+			
+					
+			END_IF
+		 
+		END_FOR
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <GVL Name="CAInterface" Id="{3ba2f8b4-3b2e-4366-8a28-27e677bac185}">
+    <Declaration><![CDATA[VAR_GLOBAL
+	MoverInterface: ARRAY[1..grpcnt] OF DUT_XTS_Interface;
+END_VAR]]></Declaration>
+    <ObjectProperties />
+  </GVL>
+</TcPlcObject>

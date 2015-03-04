@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_AutoBlock" Id="{1037ae18-ff85-45fd-a347-da954e954adf}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_AutoBlock
+VAR_INPUT
+	execute: BOOL;
+	axno: INT;
+	blockingtime: TIME := TIME#2s0ms;
+END_VAR
+VAR
+	state: INT := 0;
+	fbTimer: TON;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT Execute THEN
+	state := 0;
+ELSE
+	CASE state OF
+		
+	0: 
+		MoverInfo[axno].blocked := TRUE;
+		fbTimer(IN := FALSE);
+		fbTimer(IN := TRUE, PT := blockingtime);
+		state := 1;
+	1:	
+		fbTimer();
+		IF fbTimer.Q THEN
+			MoverInfo[axno].blocked := FALSE;
+			execute := FALSE;
+			state := 0;
+		END_IF
+		
+	
+	
+	
+	
+	END_CASE
+END_IF
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

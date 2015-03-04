@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_SimuLampHandle" Id="{aa596e4b-7c11-4075-80a9-1261268c4614}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SimuLampHandle
+VAR_INPUT
+	execute: BOOL;
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	fbCheckLamp	: ARRAY[1..ColourCnt] OF ARRAY [1..LampCnt] OF FB_CheckSimuVisu;
+	i : INT;
+	j : INT;
+	LampWith	: LREAL;
+	Timer		: ARRAY [1..GrpCnt] OF TOF;
+	Blinker		: ARRAY [1..GrpCnt] OF TON;
+	RTrigger		: ARRAY [1..GrpCnt] OF R_TRIG;
+	FTrigger		: ARRAY [1..GrpCnt] OF F_TRIG;
+	changedetected	: ARRAY [1..GrpCnt] OF BOOL;
+	blink		: ARRAY [1..GrpCNt] OF BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[LampWith := raillength/LampCnt;
+IF execute THEN
+	
+
+	FOR i := 1 TO grpcnt DO
+		
+		RTrigger[i](CLK := MoverInfo[i].reserved);
+		FTrigger[i](CLK := MoverInfo[i].reserved);
+		IF RTrigger[i].Q OR fTrigger[i].Q THEN
+			changedetected[i] := TRUE;
+			Timer[i](IN := TRUE);
+		END_IF
+		IF changedetected[i] THEN
+			Timer[i](IN := FALSE, PT := T#1S);
+			changedetected[i] := Timer[i].Q;
+			Blinker[i](IN := TRUE, PT := T#0.2S);
+			IF BLinker[i].Q THEN
+				BLinker[i](IN := FALSE);
+				blink[i] := NOT blink[i];
+			END_IF
+		ELSE
+			blink[i] := TRUE;
+		END_IF
+		
+		FOR j := 1 TO LampCnt DO
+			
+			fbCheckLamp[i][j](LampPosition := j*LampWith + 0.5 * LampWith + 20, CheckMoverNo := i, Execute := TRUE, Lamp => LampInterface[i][j]);
+			IF NOT blink[i] THEN 
+			LampInterface[i][j] := FALSE;
+				
+			END_IF
+		END_FOR
+	
+	
+	END_FOR
+
+END_IF]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="FB_SectionChange" Id="{18348d91-32b5-4615-8109-f66f64683b52}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_SectionChange
+VAR_INPUT
+	Position	: LREAL;
+	Clockwise	: BOOL;
+END_VAR
+VAR_OUTPUT
+	Phase			: INT;
+	Trigger			: BOOL;
+END_VAR
+VAR
+	PhaseMemo	: INT;
+	i 	: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FOR i := 1 TO curvesectioncnt DO
+	Trigger := TRUE;
+	IF ( Position > GVL.CurveSection[i-1]) AND ( Position <= GVL.CurveSection[i] ) THEN
+		
+		
+		IF NOT (Phase = PhaseMemo) THEN
+			Trigger := FALSE;
+			PhaseMemo := Phase;
+		END_IF
+		Phase := i + BOOL_TO_INT (clockwise);
+	END_IF
+END_FOR]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

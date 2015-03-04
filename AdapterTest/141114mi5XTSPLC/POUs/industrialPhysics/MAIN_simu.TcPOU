@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.25">
+  <POU Name="MAIN_simu" Id="{5a30d4c3-f2cc-4a3c-9111-ebd3bd8d2e80}">
+    <Declaration><![CDATA[PROGRAM MAIN_simu
+VAR
+	simIO: MNG_Simulation;
+	outputs: MNG_Application_Outputs_32Bit;
+	inputs: MNG_Application_Inputs_32Bit;
+	//ioUpdater: MNG_UpdateIOs := (sRemoteHost := '192.168.192.115', nRemotePort := 5000);
+	
+	bEnable: BOOL := TRUE;
+	
+	i: INT;
+	fbIOLink	: FB_IOLink;
+END_VAR
+
+VAR_INPUT
+	bExecute: BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Update IOs with simulation
+
+simIO(bEnable := bEnable, outputs := outputs, inputs => inputs);
+
+// Mapping of the IO´s
+
+fbIOLink(goon := TRUE, inputs := inputs, outputs => outputs);]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>
